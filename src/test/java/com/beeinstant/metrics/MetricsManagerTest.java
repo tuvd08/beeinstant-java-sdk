@@ -55,7 +55,6 @@ public class MetricsManagerTest {
         server.stop();
     }
 
-
     @After
     public void tearDown() throws IOException {
         responseProvider.reset();
@@ -83,7 +82,6 @@ public class MetricsManagerTest {
     @Test
     public void testGetRootMetricsLogger() throws UnsatisfiedExpectationException {
         responseProvider.expect(POST, "/PutMetric", "application/json", "{\"metrics\":\"d.service=ImageSharing,m.NumOfExceptions=1\n\"}").respondWith(200, "application/json", "");
-
         MetricsManager.getRootMetricsLogger().incCounter("NumOfExceptions", 1);
         MetricsManager.getRootMetricsLogger().flush();
         MetricsManager.flushAll();
@@ -93,7 +91,6 @@ public class MetricsManagerTest {
     @Test
     public void testExtendInvalidDimensionsIgnoreAndReportError() throws UnsatisfiedExpectationException {
         responseProvider.expect(POST, "/PutMetric", "application/json", "{\"metrics\":\"d.service=ImageSharing,m.MetricErrors=2\n\"}").respondWith(200, "application/json", "");
-
         final MetricsLogger metricsLogger = MetricsManager.getMetricsLogger("api=Upload");
         metricsLogger.extendDimensions("invalid-dimensions").incCounter("NumOfExceptions", 1);
         metricsLogger.extendDimensions("invalid=@dimensions").incCounter("NumOfExceptions", 1);

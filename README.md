@@ -17,5 +17,5 @@ static {
  metricsLogger.incCounter("NumOfExceptions", 1);
 ```
 
-### Check out our unit test for further advance use cases
+### Check out our unit test for further advanced use cases
 

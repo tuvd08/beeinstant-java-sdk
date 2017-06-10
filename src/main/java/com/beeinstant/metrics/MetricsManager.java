@@ -20,6 +20,7 @@
 package com.beeinstant.metrics;
 
 import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -28,8 +29,13 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.log4j.Logger;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
+import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -48,6 +54,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 public class MetricsManager {
 
     private static final Logger LOG = Logger.getLogger(MetricsManager.class);
+    private static final String EMPTY_STRING = "";
 
     private static final HttpHost BEEINSTANT_HOST = new HttpHost(System.getProperty("beeinstant.host", "localhost"),
             Integer.valueOf(System.getProperty("beeinstant.port", "9999")),
@@ -60,9 +67,11 @@ public class MetricsManager {
     private static final int flushInSeconds = Integer.valueOf(System.getProperty("flush.interval", "10"));
     private static final int flushStartDelayInSeconds = Integer.valueOf(System.getProperty("flush.startDelay", "5"));
     private static final boolean manualFlush = Boolean.valueOf(System.getProperty("flush.manual", "false"));
+    private static final String publicKey = System.getProperty("publicKey", EMPTY_STRING);
+    private static final String secretKey = System.getProperty("secretKey", EMPTY_STRING);
 
     private static final String METRIC_ERRORS = "MetricErrors";
-    private static CloseableHttpClient httpclient = null;
+    private static CloseableHttpClient httpClient = null;
     private static MetricsLogger rootMetricsLogger = null;
     private static volatile MetricsManager instance = null;
 
@@ -93,7 +102,7 @@ public class MetricsManager {
                 if (MetricsManager.instance == null) {
                     MetricsManager.instance = new MetricsManager(serviceName, hostInfo);
                     MetricsManager.rootMetricsLogger = MetricsManager.instance.metricsLoggers.computeIfAbsent("service=" + serviceName, MetricsLogger::new);
-                    MetricsManager.httpclient = HttpClients.custom()
+                    MetricsManager.httpClient = HttpClients.custom()
                             .setConnectionManager(new PoolingHttpClientConnectionManager(Integer.MAX_VALUE, TimeUnit.DAYS)) //no more than 2 concurrent connections per given route
                             .setKeepAliveStrategy((response, context) -> 60000)
                             .setRetryHandler(new DefaultHttpRequestRetryHandler()) // 3 times retry by default
@@ -190,11 +199,20 @@ public class MetricsManager {
         });
         if (!readyToSubmit.isEmpty()) {
             try {
-                HttpPost injectMetricCommand = new HttpPost("/PutMetric");
                 StringEntity entity = new StringEntity("{\"metrics\":\"" + builder.toString() + "\"}");
                 entity.setContentType("application/json");
-                injectMetricCommand.setEntity(entity);
-                httpclient.execute(BEEINSTANT_HOST, injectMetricCommand);
+
+                String uri = "/PutMetric";
+                final String signature = sign(entity);
+                if (!signature.isEmpty()) {
+                    uri += "?signature=" + URLEncoder.encode(signature, "UTF-8");
+                }
+
+                HttpPost putMetricCommand = new HttpPost(uri);
+                putMetricCommand.setEntity(entity);
+                HttpResponse response = httpClient.execute(BEEINSTANT_HOST, putMetricCommand);
+                LOG.info("Response: " + response.getStatusLine().getStatusCode());
+
             } catch (Throwable e) {
                 LOG.error("Fail to emit metrics", e);
             }
@@ -210,7 +228,7 @@ public class MetricsManager {
         if (MetricsManager.instance != null) {
             return MetricsManager.instance.hostInfo;
         }
-        return "";
+        return EMPTY_STRING;
     }
 
     /**
@@ -222,7 +240,7 @@ public class MetricsManager {
         if (MetricsManager.instance != null) {
             return MetricsManager.instance.serviceName;
         }
-        return "";
+        return EMPTY_STRING;
     }
 
     /**
@@ -250,5 +268,20 @@ public class MetricsManager {
 
     private static void queue(String metricString) {
         metricsQueue.add(metricString);
+    }
+
+    private static String sign(StringEntity entity) throws IOException {
+        if (!publicKey.isEmpty() && !secretKey.isEmpty()) {
+            InputStream content = entity.getContent();
+            byte[] contentBytes = new byte[content.available()];
+            content.read(contentBytes);
+            content.close();
+            try {
+                return new String(Signature.sign(contentBytes, secretKey));
+            } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+                LOG.error(e.getMessage());
+            }
+        }
+        return EMPTY_STRING;
     }
 }

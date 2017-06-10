@@ -27,7 +27,7 @@ public class DummyLogger extends MetricsLogger {
 
     private static final DummyMetrics dummyMetrics = new DummyMetrics();
 
-    public DummyLogger() {
+    DummyLogger() {
         super("dummy");
     }
 
