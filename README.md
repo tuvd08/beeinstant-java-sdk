@@ -1,4 +1,4 @@
-# haymetric-sdk-java
+# beeinstant-java-sdk
 
 ## Usage
 

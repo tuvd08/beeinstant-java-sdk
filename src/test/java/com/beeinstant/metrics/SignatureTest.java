@@ -19,44 +19,18 @@
 
 package com.beeinstant.metrics;
 
-/**
- * Units used in BeeInstant
- */
-public enum Unit {
+import org.junit.Assert;
+import org.junit.Test;
 
-    /* time units */
-    NANO_SECOND("ns"),
-    MICRO_SECOND("us"),
-    MILLI_SECOND("ms"),
-    SECOND("s"),
-    MINUTE("m"),
-    HOUR("h"),
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
-    /* byte units */
-    BYTE("b"),
-    KILO_BYTE("kb"),
-    MEGA_BYTE("mb"),
-    GIGA_BYTE("gb"),
-    TERA_BYTE("tb"),
-
-    /* rate units */
-    BIT_PER_SEC("bps"),
-    KILO_BIT_PER_SEC("kbps"),
-    MEGA_BIT_PER_SEC("mbps"),
-    GIGA_BIT_PER_SEC("gbps"),
-    TERA_BIT_PER_SEC("tbps"),
-
-    PERCENT("p"),
-    NONE("");
-
-    final String unit;
-
-    Unit(final String unit) {
-        this.unit = unit;
-    }
-
-    @Override
-    public String toString() {
-        return this.unit;
+public class SignatureTest {
+    @Test
+    public void testSignature()
+            throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+        Assert.assertEquals("RiiEN2EwRBFNIef615g3wSM2IC9MhQCFSPsiZpNCb1Y=",
+                new String(Signature.sign("Hello".getBytes(), "World")));
     }
 }

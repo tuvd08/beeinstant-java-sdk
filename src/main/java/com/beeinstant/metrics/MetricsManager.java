@@ -49,9 +49,9 @@ public class MetricsManager {
 
     private static final Logger LOG = Logger.getLogger(MetricsManager.class);
 
-    private static final HttpHost HAYMETRIC_HOST = new HttpHost(System.getProperty("haymetric.host", "localhost"),
-            Integer.valueOf(System.getProperty("haymetric.port", "9999")),
-            System.getProperty("haymetric.protocol", HttpHost.DEFAULT_SCHEME_NAME));
+    private static final HttpHost BEEINSTANT_HOST = new HttpHost(System.getProperty("beeinstant.host", "localhost"),
+            Integer.valueOf(System.getProperty("beeinstant.port", "9999")),
+            System.getProperty("beeinstant.protocol", HttpHost.DEFAULT_SCHEME_NAME));
 
     private static final DummyLogger dummyLogger = new DummyLogger();
 
@@ -177,10 +177,10 @@ public class MetricsManager {
     }
 
     /**
-     * Flush metrics to Haymetric Server
+     * Flush metrics to BeeInstant Server
      */
     static void flushToServer() {
-        LOG.debug("Flush to Haymetric Server");
+        LOG.debug("Flush to BeeInstant Server");
         Collection<String> readyToSubmit = new ArrayList<>();
         metricsQueue.drainTo(readyToSubmit);
         StringBuilder builder = new StringBuilder();
@@ -194,7 +194,7 @@ public class MetricsManager {
                 StringEntity entity = new StringEntity("{\"metrics\":\"" + builder.toString() + "\"}");
                 entity.setContentType("application/json");
                 injectMetricCommand.setEntity(entity);
-                httpclient.execute(HAYMETRIC_HOST, injectMetricCommand);
+                httpclient.execute(BEEINSTANT_HOST, injectMetricCommand);
             } catch (Throwable e) {
                 LOG.error("Fail to emit metrics", e);
             }

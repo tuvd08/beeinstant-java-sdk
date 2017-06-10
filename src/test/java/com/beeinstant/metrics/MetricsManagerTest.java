@@ -30,28 +30,28 @@ import static com.github.kristofa.test.http.Method.POST;
 
 public class MetricsManagerTest {
 
-    private static final int HAYMETRIC_PORT = 8989;
+    private static final int BEEINSTANT_PORT = 8989;
     private static final String TEST_SERVICE_NAME = "ImageSharing";
-    private static final String TEST_HOST_NAME = "test.haymetric.com";
+    private static final String TEST_HOST_NAME = "test.beeinstant.com";
     private static MockHttpServer server;
     private static SimpleHttpResponseProvider responseProvider;
 
     static {
         // stop scheduled flush
         System.setProperty("flush.manual", "true");
-        System.setProperty("haymetric.port", String.valueOf(HAYMETRIC_PORT));
+        System.setProperty("beeinstant.port", String.valueOf(BEEINSTANT_PORT));
         MetricsManager.init(TEST_SERVICE_NAME, TEST_HOST_NAME);
     }
 
     @BeforeClass
-    public static void startMockHaymetricServer() throws IOException {
+    public static void startMockBeeInstantServer() throws IOException {
         responseProvider = new SimpleHttpResponseProvider();
-        server = new MockHttpServer(HAYMETRIC_PORT, responseProvider);
+        server = new MockHttpServer(BEEINSTANT_PORT, responseProvider);
         server.start();
     }
 
     @AfterClass
-    public static void stopMockHaymetricServer() throws IOException {
+    public static void stopMockBeeInstantServer() throws IOException {
         server.stop();
     }
 

@@ -42,18 +42,18 @@ import static org.junit.Assert.assertTrue;
 public class MetricsManagerIT {
 
     private static final String TEST_SERVICE_NAME = "test";
-    private static final String TEST_HAYMETRIC_HOST = "192.168.1.11";
+    private static final String TEST_BEEINSTANT_HOST = "192.168.1.11";
 
     @Before
     public void setUp() {
         System.setProperty("flush.interval", "5");
         System.setProperty("flush.startDelay", "5");
-        System.setProperty("haymetric.host", TEST_HAYMETRIC_HOST);
-        MetricsManager.init(TEST_SERVICE_NAME, TEST_HAYMETRIC_HOST);
+        System.setProperty("beeinstant.host", TEST_BEEINSTANT_HOST);
+        MetricsManager.init(TEST_SERVICE_NAME, TEST_BEEINSTANT_HOST);
     }
 
     @Test
-    public void testEmitMetricsToHaymetricServer() throws IOException, InterruptedException {
+    public void testEmitMetricsToBeeInstantServer() throws IOException, InterruptedException {
 
         // Use automatic flush
         MetricsManager.getMetricsLogger("api=Upload").incCounter("NumOfExceptionsTest", 1);
@@ -64,7 +64,7 @@ public class MetricsManagerIT {
         HttpClient client = HttpClientBuilder.create().build();
         HttpPost searchMetricCommand = new HttpPost("/SearchMetric");
         searchMetricCommand.setEntity(new StringEntity("{\"query\":\"Test\", \"limit\":\"50\"}"));
-        HttpResponse response = client.execute(HttpHost.create("http://"+ TEST_HAYMETRIC_HOST + ":9999"), searchMetricCommand);
+        HttpResponse response = client.execute(HttpHost.create("http://"+ TEST_BEEINSTANT_HOST + ":9999"), searchMetricCommand);
         assertEquals(response.getStatusLine().getStatusCode(), 200);
         BufferedReader br = new BufferedReader(
                 new InputStreamReader((response.getEntity().getContent())));

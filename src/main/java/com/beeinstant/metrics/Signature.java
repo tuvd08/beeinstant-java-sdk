@@ -19,44 +19,21 @@
 
 package com.beeinstant.metrics;
 
-/**
- * Units used in BeeInstant
- */
-public enum Unit {
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 
-    /* time units */
-    NANO_SECOND("ns"),
-    MICRO_SECOND("us"),
-    MILLI_SECOND("ms"),
-    SECOND("s"),
-    MINUTE("m"),
-    HOUR("h"),
+public class Signature {
 
-    /* byte units */
-    BYTE("b"),
-    KILO_BYTE("kb"),
-    MEGA_BYTE("mb"),
-    GIGA_BYTE("gb"),
-    TERA_BYTE("tb"),
-
-    /* rate units */
-    BIT_PER_SEC("bps"),
-    KILO_BIT_PER_SEC("kbps"),
-    MEGA_BIT_PER_SEC("mbps"),
-    GIGA_BIT_PER_SEC("gbps"),
-    TERA_BIT_PER_SEC("tbps"),
-
-    PERCENT("p"),
-    NONE("");
-
-    final String unit;
-
-    Unit(final String unit) {
-        this.unit = unit;
+    public static byte[] sign(final byte[] data, final String key)
+            throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+        String algorithm = "HmacSHA256";
+        Mac mac = Mac.getInstance(algorithm);
+        mac.init(new SecretKeySpec(key.getBytes(), algorithm));
+        return Base64.getEncoder().encode(mac.doFinal(data));
     }
 
-    @Override
-    public String toString() {
-        return this.unit;
-    }
 }
