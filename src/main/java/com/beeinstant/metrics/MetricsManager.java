@@ -206,6 +206,7 @@ public class MetricsManager {
                 final String signature = sign(entity);
                 if (!signature.isEmpty()) {
                     uri += "?signature=" + URLEncoder.encode(signature, "UTF-8");
+                    uri += "&publicKey=" + URLEncoder.encode(publicKey, "UTF-8");
                 }
 
                 HttpPost putMetricCommand = new HttpPost(uri);
