@@ -26,7 +26,8 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -41,15 +42,22 @@ import static org.junit.Assert.assertTrue;
 
 public class MetricsManagerIT {
 
-    private static final String TEST_SERVICE_NAME = "test";
-    private static final String TEST_BEEINSTANT_HOST = "192.168.1.11";
+    private static final String TEST_SERVICE_NAME = "IntegrationTest";
+    private static final String TEST_BEEINSTANT_HOST = "176.34.155.76";
 
-    @Before
-    public void setUp() {
+    @BeforeClass
+    public static void setUpClass() {
         System.setProperty("flush.interval", "5");
         System.setProperty("flush.startDelay", "5");
+        System.setProperty("publicKey", "K7G1h5ukJ5Bp");
+        System.setProperty("secretKey", "a8P8A5Aix2Fc");
         System.setProperty("beeinstant.host", TEST_BEEINSTANT_HOST);
         MetricsManager.init(TEST_SERVICE_NAME, TEST_BEEINSTANT_HOST);
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        MetricsManager.shutdown();
     }
 
     @Test
@@ -63,7 +71,7 @@ public class MetricsManagerIT {
 
         HttpClient client = HttpClientBuilder.create().build();
         HttpPost searchMetricCommand = new HttpPost("/SearchMetric");
-        searchMetricCommand.setEntity(new StringEntity("{\"query\":\"Test\", \"limit\":\"50\"}"));
+        searchMetricCommand.setEntity(new StringEntity("{\"query\":\"IntegrationTest\", \"limit\":\"50\"}"));
         HttpResponse response = client.execute(HttpHost.create("http://"+ TEST_BEEINSTANT_HOST + ":9999"), searchMetricCommand);
         assertEquals(response.getStatusLine().getStatusCode(), 200);
         BufferedReader br = new BufferedReader(

@@ -59,7 +59,7 @@ public class TimerTest {
         Thread.sleep(100);
         this.timer.stopTimer();
 
-        TestHelper.assertRecorderOutput(Arrays.asList(100.0), Unit.MILLI_SECOND, this.timer.flushToString(), 10.0);
+        TestHelper.assertRecorderOutput(Arrays.asList(100.0), Unit.MILLI_SECOND, this.timer.flushToString(), 30.0);
         Assert.assertTrue("Some data are still left after being flushed", this.timer.flushToString().isEmpty());
     }
 
@@ -91,7 +91,7 @@ public class TimerTest {
         Thread.sleep(300);
         this.timer.merge(timer2);
         this.timer.stopTimer();
-        TestHelper.assertRecorderOutput(Arrays.asList(300.0), Unit.MILLI_SECOND, this.timer.flushToString(), 10.0);
+        TestHelper.assertRecorderOutput(Arrays.asList(300.0), Unit.MILLI_SECOND, this.timer.flushToString(), 30.0);
         Assert.assertTrue("Some data are still left after being flushed", this.timer.flushToString().isEmpty());
         Assert.assertTrue("Some data are still left after being flushed", timer2.flushToString().isEmpty());
     }

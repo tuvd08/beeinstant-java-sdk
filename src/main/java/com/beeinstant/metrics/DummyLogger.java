@@ -28,7 +28,7 @@ public class DummyLogger extends MetricsLogger {
     private static final DummyMetrics dummyMetrics = new DummyMetrics();
 
     DummyLogger() {
-        super("dummy");
+        super("service=Dummy");
     }
 
     @Override

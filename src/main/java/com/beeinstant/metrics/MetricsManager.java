@@ -49,7 +49,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * - First, initialize MetricsManager with a Service Name and hostInfo info.
  * - Second, get a MetricsLogger to start collecting metrics.
  * <p>
- * This class is thread-safe.
+ * This class is thread-safe except method shutdown.
  */
 public class MetricsManager {
 
@@ -74,6 +74,7 @@ public class MetricsManager {
     private static CloseableHttpClient httpClient = null;
     private static MetricsLogger rootMetricsLogger = null;
     private static volatile MetricsManager instance = null;
+    private static ScheduledExecutorService executorService = null;
 
     private final String serviceName;
     private final String hostInfo;
@@ -109,7 +110,8 @@ public class MetricsManager {
                             .build();
                     if (!manualFlush) {
                         try {
-                            Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
+                            executorService = Executors.newScheduledThreadPool(1);
+                            executorService.scheduleAtFixedRate(() -> {
                                 try {
                                     flushAll();
                                 } catch (Throwable e) {
@@ -123,6 +125,22 @@ public class MetricsManager {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Shutdown MetricsManager, clean up resources
+     * This method is not thread-safe, only use it to clean up resources when your application is shutting down.
+     */
+    public static void shutdown() {
+        if (MetricsManager.executorService != null) {
+            MetricsManager.executorService.shutdown();
+            MetricsManager.executorService = null;
+        }
+        if (MetricsManager.instance != null) {
+            MetricsManager.instance = null;
+            MetricsManager.httpClient = null;
+            MetricsManager.rootMetricsLogger = null;
         }
     }
 
