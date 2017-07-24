@@ -26,8 +26,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 class Timer implements Metric {
 
-    private final AtomicLong startTime = new AtomicLong(0);
     private final Recorder recorder = new Recorder(Unit.MILLI_SECOND);
+    private final ThreadLocal<Long> startTime = ThreadLocal.withInitial(() -> 0L);
 
     @Override
     public void startTimer() {
@@ -36,10 +36,11 @@ class Timer implements Metric {
 
     @Override
     public void stopTimer() {
-        final long startTimeValue = this.startTime.getAndSet(0);
+        final long startTimeValue = this.startTime.get();
         if (startTimeValue > 0) {
             final long duration = System.currentTimeMillis() - startTimeValue;
             this.recorder.record(duration, Unit.MILLI_SECOND);
+            this.startTime.set(0L);
         }
     }
 
@@ -62,7 +63,8 @@ class Timer implements Metric {
     public Metric merge(final Metric newData) {
         if (newData instanceof Timer) {
             final Timer newTimer = (Timer) newData;
-            this.startTime.set(newTimer.startTime.getAndSet(0));
+            this.startTime.set(newTimer.startTime.get());
+            newTimer.startTime.set(0L);
             this.recorder.merge(newTimer.recorder);
             return this;
         }

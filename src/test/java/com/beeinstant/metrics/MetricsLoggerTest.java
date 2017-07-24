@@ -125,6 +125,9 @@ public class MetricsLoggerTest {
             }
         });
 
+        executor.shutdown();
+        executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS);
+
         // flush everything left
         output.add(flushMetricsLoggerToString(this.metricsLogger));
 
@@ -148,7 +151,7 @@ public class MetricsLoggerTest {
         Assert.assertEquals(500, recorderValues.size());
         Assert.assertEquals(500, recorderValues.stream().mapToDouble(Double::doubleValue).sum(), 0.0);
         // assert timer
-        Assert.assertTrue(timerValues.size() > 0);
+        Assert.assertEquals(500, timerValues.size());
         // assert counter
         Assert.assertEquals(500, counterValues.stream().mapToDouble(Double::doubleValue).sum(), 0.0);
     }
