@@ -62,7 +62,7 @@
                         <artifactId>maven-gpg-plugin</artifactId>
                         <version>1.6</version>
                         <configuration>
-                            <passphrase>${env.gpg_passphrase}</passphrase>
+                            <passphrase>${gpg.passphrase}</passphrase>
                         </configuration>
                         <executions>
                             <execution>
@@ -103,7 +103,7 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <version>2.5.1</version>
                 <configuration>
-                    <arguments>-Dgpg.passphrase=${env.gpg_passphrase}</arguments>
+                    <arguments>-Dgpg.passphrase=${gpg.passphrase}</arguments>
                 </configuration>
             </plugin>
         </plugins>
