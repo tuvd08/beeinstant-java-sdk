@@ -43,7 +43,7 @@
             <id>sonatype-nexus-staging</id>
             <name>Sonatype Nexus release repository</name>
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
+        </repository>  
     </distributionManagement>
 
     <profiles>
