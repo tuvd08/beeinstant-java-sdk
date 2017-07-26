@@ -29,7 +29,7 @@
 
     <scm>
         <connection>scm:git:git://github.com/beeinstant-dev/beeinstant-java-sdk.git</connection>
-        <developerConnection>scm:git:beeinstant-dev@github.com:beeinstant-dev/beeinstant-java-sdk.git</developerConnection>
+        <developerConnection>scm:git:git@github.com:beeinstant-dev/beeinstant-java-sdk.git</developerConnection>
         <url>https://github.com/beeinstant-dev/beeinstant-java-sdk</url>
     </scm>
 
