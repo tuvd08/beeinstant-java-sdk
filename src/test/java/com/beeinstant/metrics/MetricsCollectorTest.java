@@ -52,12 +52,13 @@ public class MetricsCollectorTest {
 
     @Test
     public void testStartStopTimers() throws InterruptedException {
-        this.metricsCollector.startTimer("Clock1");
+        long startTime = 0;
+        startTime = this.metricsCollector.startTimer("Clock1");
         Thread.sleep(100);
-        this.metricsCollector.stopTimer("Clock1");
-        this.metricsCollector.startTimer("Clock2");
+        this.metricsCollector.stopTimer("Clock1", startTime);
+        startTime = this.metricsCollector.startTimer("Clock2");
         Thread.sleep(200);
-        this.metricsCollector.stopTimer("Clock2");
+        this.metricsCollector.stopTimer("Clock2", startTime);
 
         final Map<String, Metric> metrics = this.metricsCollector.getMetrics();
         Assert.assertEquals(2, metrics.size());
@@ -83,9 +84,10 @@ public class MetricsCollectorTest {
 
     @Test
     public void testIgnoreInvalidMetricNames() {
+        final long startTime;
         this.metricsCollector.incCounter("Invalid@Name", 1);
-        this.metricsCollector.startTimer("Invalid@Name");
-        this.metricsCollector.stopTimer("Invalid@Name");
+        startTime = this.metricsCollector.startTimer("Invalid@Name");
+        this.metricsCollector.stopTimer("Invalid@Name", startTime);
         this.metricsCollector.record("Invalid@Name", 1, Unit.SECOND);
         Assert.assertTrue(this.metricsCollector.flushToString().isEmpty());
         Assert.assertTrue(this.metricsCollector.flushToString().isEmpty());
@@ -98,9 +100,10 @@ public class MetricsCollectorTest {
 
     @Test
     public void testFlushMetricsCollectorToString() {
+        final long startTime;
         this.metricsCollector.incCounter("MyCounter", 99);
-        this.metricsCollector.startTimer("MyTimer");
-        this.metricsCollector.stopTimer("MyTimer");
+        startTime = this.metricsCollector.startTimer("MyTimer");
+        this.metricsCollector.stopTimer("MyTimer", startTime);
         this.metricsCollector.record("Recorder", 100, Unit.BYTE);
         Assert.assertTrue(this.metricsCollector.flushToString().matches("m.MyTimer=\\d.\\dms,m.MyCounter=99,m.Recorder=100.0b"));
         Assert.assertTrue("Some data are still left after being flushed", this.metricsCollector.flushToString().isEmpty());
@@ -142,22 +145,24 @@ public class MetricsCollectorTest {
 
     @Test
     public void testMergeMetricsCollector() {
+        long startTime = 0;
         final MetricsCollector metricsCollector2 = new MetricsCollector();
         metricsCollector2.incCounter("MyCounter", 2);
-        metricsCollector2.startTimer("MyTimer");
-        metricsCollector2.stopTimer("MyTimer");
+        startTime = metricsCollector2.startTimer("MyTimer");
+        metricsCollector2.stopTimer("MyTimer", startTime);
         metricsCollector2.record("Recorder", 200, Unit.BYTE);
         metricsCollector2.incCounter("MyCounter2", 1);
-        metricsCollector2.startTimer("MyTimer2");
-        metricsCollector2.stopTimer("MyTimer2");
+        startTime = metricsCollector2.startTimer("MyTimer2");
+        metricsCollector2.stopTimer("MyTimer2", startTime);
         metricsCollector2.record("Recorder2", 300, Unit.SECOND);
         assertMerge(metricsCollector2, "m.MyTimer=\\d.\\d\\+\\d.\\dms,m.MyCounter=101,m.MyTimer2=\\d.\\dms,m.Recorder=100.0\\+200.0b,m.Recorder2=300.0s,m.MyCounter2=1");
     }
 
     private void assertMerge(final MetricsCollector metricsCollector, final String expectedOutput) {
+        final long startTime;
         this.metricsCollector.incCounter("MyCounter", 99);
-        this.metricsCollector.startTimer("MyTimer");
-        this.metricsCollector.stopTimer("MyTimer");
+        startTime = this.metricsCollector.startTimer("MyTimer");
+        this.metricsCollector.stopTimer("MyTimer", startTime);
         this.metricsCollector.record("Recorder", 100, Unit.BYTE);
         this.metricsCollector.merge(metricsCollector);
         Assert.assertTrue(this.metricsCollector.flushToString().matches(expectedOutput));

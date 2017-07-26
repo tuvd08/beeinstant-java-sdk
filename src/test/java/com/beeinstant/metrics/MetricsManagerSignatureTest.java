@@ -41,10 +41,10 @@ public class MetricsManagerSignatureTest {
 
     static {
         // stop scheduled flush
-        System.setProperty("flush.manual", "true");
-        System.setProperty("beeinstant.port", String.valueOf(BEEINSTANT_PORT));
-        System.setProperty("publicKey", "Hello");
-        System.setProperty("secretKey", "World");
+        System.setProperty("beeinstant.flush.manual", "true");
+        System.setProperty("beeinstant.endpoint", "http://localhost:" + BEEINSTANT_PORT);
+        System.setProperty("beeinstant.publicKey", "Hello");
+        System.setProperty("beeinstant.secretKey", "World");
         MetricsManager.init(TEST_SERVICE_NAME, TEST_HOST_NAME);
     }
 

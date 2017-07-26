@@ -90,7 +90,7 @@ public class CounterTest {
 
     @Test(expected = UnsupportedOperationException.class)
     public void testThrowUnsupportedOperationForTimerStop() {
-        this.counter.stopTimer();
+        this.counter.stopTimer(0);
     }
 
     @Test(expected = UnsupportedOperationException.class)

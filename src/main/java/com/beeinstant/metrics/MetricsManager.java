@@ -31,9 +31,7 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.URLEncoder;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -56,19 +54,16 @@ public class MetricsManager {
     private static final Logger LOG = Logger.getLogger(MetricsManager.class);
     private static final String EMPTY_STRING = "";
 
-    private static final HttpHost BEEINSTANT_HOST = new HttpHost(System.getProperty("beeinstant.host", "localhost"),
-            Integer.valueOf(System.getProperty("beeinstant.port", "9999")),
-            System.getProperty("beeinstant.protocol", HttpHost.DEFAULT_SCHEME_NAME));
-
     private static final DummyLogger dummyLogger = new DummyLogger();
 
     private static final BlockingDeque<String> metricsQueue = new LinkedBlockingDeque<>();
 
-    private static final int flushInSeconds = Integer.valueOf(System.getProperty("flush.interval", "10"));
-    private static final int flushStartDelayInSeconds = Integer.valueOf(System.getProperty("flush.startDelay", "5"));
-    private static final boolean manualFlush = Boolean.valueOf(System.getProperty("flush.manual", "false"));
-    private static final String publicKey = System.getProperty("publicKey", EMPTY_STRING);
-    private static final String secretKey = System.getProperty("secretKey", EMPTY_STRING);
+    private static final int flushInSeconds = Integer.valueOf(System.getProperty("beeinstant.flush.interval", "10"));
+    private static final int flushStartDelayInSeconds = Integer.valueOf(System.getProperty("beeinstant.flush.startDelay", "5"));
+    private static final boolean manualFlush = Boolean.valueOf(System.getProperty("beeinstant.flush.manual", "false"));
+    private static final String publicKey = System.getProperty("beeinstant.publicKey", EMPTY_STRING);
+    private static final String secretKey = System.getProperty("beeinstant.secretKey", EMPTY_STRING);
+    private static final String endpoint = System.getProperty("beeinstant.endpoint", EMPTY_STRING);
 
     private static final String METRIC_ERRORS = "MetricErrors";
     private static CloseableHttpClient httpClient = null;
@@ -76,6 +71,7 @@ public class MetricsManager {
     private static volatile MetricsManager instance = null;
     private static ScheduledExecutorService executorService = null;
 
+    private static HttpHost beeInstantHost;
     private final String serviceName;
     private final String hostInfo;
     private final Map<String, MetricsLogger> metricsLoggers = new ConcurrentHashMap<>();
@@ -83,6 +79,7 @@ public class MetricsManager {
     private MetricsManager(final String serviceName, final String hostInfo) {
         this.serviceName = serviceName;
         this.hostInfo = hostInfo;
+        beeInstantHost = createHostFromEndpoint(endpoint);
     }
 
     /**
@@ -215,7 +212,7 @@ public class MetricsManager {
             builder.append(string);
             builder.append("\n");
         });
-        if (!readyToSubmit.isEmpty()) {
+        if (!readyToSubmit.isEmpty() && beeInstantHost != null) {
             try {
                 StringEntity entity = new StringEntity("{\"metrics\":\"" + builder.toString() + "\"}");
                 entity.setContentType("application/json");
@@ -229,7 +226,7 @@ public class MetricsManager {
 
                 HttpPost putMetricCommand = new HttpPost(uri);
                 putMetricCommand.setEntity(entity);
-                HttpResponse response = httpClient.execute(BEEINSTANT_HOST, putMetricCommand);
+                HttpResponse response = httpClient.execute(beeInstantHost, putMetricCommand);
                 LOG.info("Response: " + response.getStatusLine().getStatusCode());
 
             } catch (Throwable e) {
@@ -302,5 +299,16 @@ public class MetricsManager {
             }
         }
         return EMPTY_STRING;
+    }
+
+    private static HttpHost createHostFromEndpoint(String endpoint) {
+        HttpHost host = null;
+        try {
+            final URL url = new URL(endpoint);
+            host = new HttpHost(url.getHost(), url.getPort(), url.getProtocol());
+        } catch (MalformedURLException e) {
+            LOG.error(e.getMessage());
+        }
+        return host;
     }
 }

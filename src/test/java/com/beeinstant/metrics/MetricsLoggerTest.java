@@ -21,7 +21,6 @@ package com.beeinstant.metrics;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.*;
@@ -103,7 +102,6 @@ public class MetricsLoggerTest {
     }
 
     @Test
-    @Ignore //Temporary ignore to get the relese work
     public void testLoggingAndFlushingMetricsInMultipleThreads() throws InterruptedException {
         final ExecutorService executor = Executors.newWorkStealingPool();
         final List<Callable<Void>> tasks = new ArrayList<>();
@@ -215,9 +213,10 @@ public class MetricsLoggerTest {
             tasks.add(() -> {
                 for (int j = 0; j < numOfSamples; j++) {
                     Thread.sleep(rand.nextInt(40));
-                    metricsLogger.startTimer("MyTimer");
+                    final long startTime;
+                    startTime = metricsLogger.startTimer("MyTimer");
                     Thread.sleep(rand.nextInt(10));
-                    metricsLogger.stopTimer("MyTimer");
+                    metricsLogger.stopTimer("MyTimer", startTime);
                 }
                 return null;
             });
@@ -240,9 +239,10 @@ public class MetricsLoggerTest {
     }
 
     private void collectTestMetrics(final Metrics metrics) {
+        final long startTime;
         metrics.incCounter("NumOfUploadedImages", 1000);
-        metrics.startTimer("Latency");
-        metrics.stopTimer("Latency");
+        startTime = metrics.startTimer("Latency");
+        metrics.stopTimer("Latency", startTime);
         metrics.record("ImageSize", 100, Unit.KILO_BYTE);
         metrics.record("ImageSize", 200, Unit.KILO_BYTE);
     }

@@ -21,6 +21,7 @@ package com.beeinstant.metrics;
 
 import java.util.Arrays;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -46,13 +47,15 @@ class MetricsGroup implements Metrics {
     }
 
     @Override
-    public void startTimer(final String timerName) {
-        updateMetricsCollector(metricsCollector -> metricsCollector.startTimer(timerName));
+    public long startTimer(final String timerName) {
+        final AtomicLong startTime = new AtomicLong(0);
+        updateMetricsCollector(metricsCollector -> startTime.set(metricsCollector.startTimer(timerName)));
+        return startTime.get();
     }
 
     @Override
-    public void stopTimer(final String timerName) {
-        updateMetricsCollector(metricsCollector -> metricsCollector.stopTimer(timerName));
+    public void stopTimer(final String timerName, long startTime) {
+        updateMetricsCollector(metricsCollector -> metricsCollector.stopTimer(timerName, startTime));
     }
 
     @Override

@@ -26,9 +26,9 @@ interface Metric {
 
     void incCounter(final int value);
 
-    void startTimer();
+    long startTimer();
 
-    void stopTimer();
+    void stopTimer(long startTime);
 
     void record(final double value, final Unit unit);
 

@@ -19,28 +19,23 @@
 
 package com.beeinstant.metrics;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 /**
  * Measure time with Timer such as latency of an API
  */
 class Timer implements Metric {
 
     private final Recorder recorder = new Recorder(Unit.MILLI_SECOND);
-    private final ThreadLocal<Long> startTime = ThreadLocal.withInitial(() -> 0L);
 
     @Override
-    public void startTimer() {
-        this.startTime.set(System.currentTimeMillis());
+    public long startTimer() {
+        return System.currentTimeMillis();
     }
 
     @Override
-    public void stopTimer() {
-        final long startTimeValue = this.startTime.get();
-        if (startTimeValue > 0) {
-            final long duration = System.currentTimeMillis() - startTimeValue;
+    public void stopTimer(long startTime) {
+        if (startTime > 0) {
+            final long duration = System.currentTimeMillis() - startTime;
             this.recorder.record(duration, Unit.MILLI_SECOND);
-            this.startTime.set(0L);
         }
     }
 
@@ -63,8 +58,6 @@ class Timer implements Metric {
     public Metric merge(final Metric newData) {
         if (newData instanceof Timer) {
             final Timer newTimer = (Timer) newData;
-            this.startTime.set(newTimer.startTime.get());
-            newTimer.startTime.set(0L);
             this.recorder.merge(newTimer.recorder);
             return this;
         }

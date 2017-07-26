@@ -41,7 +41,7 @@ public class TimerTest {
 
     @Test
     public void testStopTimerBeforeStartNothingHappens() {
-        this.timer.stopTimer();
+        this.timer.stopTimer(0);
         Assert.assertTrue("Timer has unexpected data. It should be empty", this.timer.flushToString().isEmpty());
     }
 
@@ -53,11 +53,12 @@ public class TimerTest {
 
     @Test
     public void testStartTimerMultipleTimesCausesReset() throws InterruptedException {
-        this.timer.startTimer();
+        long startTime = 0;
+        startTime = this.timer.startTimer();
         Thread.sleep(100);
-        this.timer.startTimer();
+        startTime = this.timer.startTimer();
         Thread.sleep(100);
-        this.timer.stopTimer();
+        this.timer.stopTimer(startTime);
 
         TestHelper.assertRecorderOutput(Arrays.asList(100.0), Unit.MILLI_SECOND, this.timer.flushToString(), 30.0);
         Assert.assertTrue("Some data are still left after being flushed", this.timer.flushToString().isEmpty());
@@ -65,12 +66,13 @@ public class TimerTest {
 
     @Test
     public void testStartStopTimerMultipleTimes() throws InterruptedException {
-        this.timer.startTimer();
+        long startTime = 0;
+        startTime = this.timer.startTimer();
         Thread.sleep(100);
-        this.timer.stopTimer();
-        this.timer.startTimer();
+        this.timer.stopTimer(startTime);
+        startTime = this.timer.startTimer();
         Thread.sleep(100);
-        this.timer.stopTimer();
+        this.timer.stopTimer(startTime);
 
         TestHelper.assertRecorderOutput(Arrays.asList(100.0, 100.0), Unit.MILLI_SECOND, this.timer.flushToString(), 30.0);
         Assert.assertTrue("Some data are still left after being flushed", this.timer.flushToString().isEmpty());
@@ -83,28 +85,16 @@ public class TimerTest {
     }
 
     @Test
-    public void testMergeAfterStart() throws InterruptedException {
+    public void testMergeAfterStartAndStop() throws InterruptedException {
         final Timer timer2 = new Timer();
-        this.timer.stopTimer();
+        this.timer.stopTimer(0);
         Assert.assertTrue("Timer has unexpected data. It should be empty", this.timer.flushToString().isEmpty());
-        timer2.startTimer();
+        final long startTime = timer2.startTimer();
         Thread.sleep(300);
+        timer2.stopTimer(startTime);
         this.timer.merge(timer2);
-        this.timer.stopTimer();
+        this.timer.stopTimer(0);
         TestHelper.assertRecorderOutput(Arrays.asList(300.0), Unit.MILLI_SECOND, this.timer.flushToString(), 30.0);
-        Assert.assertTrue("Some data are still left after being flushed", this.timer.flushToString().isEmpty());
-        Assert.assertTrue("Some data are still left after being flushed", timer2.flushToString().isEmpty());
-    }
-
-    @Test
-    public void testMergeAfterStartAndStop() {
-        final Timer timer2 = new Timer();
-        timer2.startTimer();
-        timer2.stopTimer();
-        this.timer.startTimer();
-        this.timer.stopTimer();
-        this.timer.merge(timer2);
-        Assert.assertTrue(this.timer.flushToString().matches("\\d\\.\\d\\+\\d\\.\\dms"));
         Assert.assertTrue("Some data are still left after being flushed", this.timer.flushToString().isEmpty());
         Assert.assertTrue("Some data are still left after being flushed", timer2.flushToString().isEmpty());
     }

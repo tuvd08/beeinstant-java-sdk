@@ -117,7 +117,7 @@ public class RecorderTest {
 
     @Test(expected = UnsupportedOperationException.class)
     public void testThrowUnsupportedOperationForTimerStop() {
-        this.recorder.stopTimer();
+        this.recorder.stopTimer(0);
     }
 
     private void assertValuesAndUnit(final String expectedOutput, final List<Double> values, final Unit unit) {

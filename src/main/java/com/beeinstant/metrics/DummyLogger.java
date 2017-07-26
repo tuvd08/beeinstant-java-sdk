@@ -57,12 +57,12 @@ public class DummyLogger extends MetricsLogger {
     }
 
     @Override
-    public void startTimer(String timerName) {
-        //do nothing
+    public long startTimer(String timerName) {
+        return 0;
     }
 
     @Override
-    public void stopTimer(String timerName) {
+    public void stopTimer(String timerName, long startTime) {
         //do nothing
     }
 

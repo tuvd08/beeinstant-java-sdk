@@ -79,12 +79,12 @@ class Recorder implements Metric {
     }
 
     @Override
-    public void startTimer() {
+    public long startTimer() {
         throw new UnsupportedOperationException("Cannot start a timer in a Recorder");
     }
 
     @Override
-    public void stopTimer() {
+    public void stopTimer(long startTime) {
         throw new UnsupportedOperationException("Cannot stop a timer in a Recorder");
     }
 }
