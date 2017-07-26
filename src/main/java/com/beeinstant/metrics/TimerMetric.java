@@ -19,20 +19,30 @@
 
 package com.beeinstant.metrics;
 
-/**
- * Directly collect data to Counter, Timer and Recorder
- */
-interface Metric {
+public class TimerMetric implements AutoCloseable {
 
-    void incCounter(final int value);
+    final private Metrics metrics;
+    final private String timerName;
+    final private long startTime;
 
-    long startTimer();
+    public TimerMetric(final Metrics metrics, final String timerName, final long startTime) {
+        this.metrics = metrics;
+        this.timerName = timerName;
+        this.startTime = startTime;
+    }
 
-    void stopTimer(long startTime);
+    public long getStartTime() {
+        return startTime;
+    }
 
-    void record(final double value, final Unit unit);
-
-    String flushToString();
-
-    Metric merge(Metric newData);
+    @Override
+    public void close() {
+        if (this.metrics instanceof MetricsLogger) {
+            ((MetricsLogger) this.metrics).stopTimer(timerName, startTime);
+        } else if (this.metrics instanceof MetricsCollector) {
+            ((MetricsCollector) this.metrics).stopTimer(timerName, startTime);
+        } else if (this.metrics instanceof MetricsGroup) {
+            ((MetricsGroup) this.metrics).stopTimer(timerName, startTime);
+        }
+    }
 }

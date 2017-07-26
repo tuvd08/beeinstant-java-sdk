@@ -19,20 +19,15 @@
 
 package com.beeinstant.metrics;
 
-public class DummyMetrics implements Metrics {
+class DummyMetrics implements Metrics {
     @Override
     public void incCounter(String counterName, int value) {
         //do nothing
     }
 
     @Override
-    public void startTimer(String timerName) {
-        //do nothing
-    }
-
-    @Override
-    public void stopTimer(String timerName) {
-        //do nothing
+    public TimerMetric startTimer(String timerName) {
+        return null;
     }
 
     @Override

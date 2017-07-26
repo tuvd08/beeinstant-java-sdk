@@ -106,13 +106,12 @@ public class MetricsLogger implements Metrics {
     }
 
     @Override
-    public void startTimer(final String timerName) {
-        this.rootMetricsGroup.startTimer(timerName);
+    public TimerMetric startTimer(final String timerName) {
+        return this.rootMetricsGroup.startTimer(timerName);
     }
 
-    @Override
-    public void stopTimer(final String timerName) {
-        this.rootMetricsGroup.stopTimer(timerName);
+    void stopTimer(final String timerName, final long startTime) {
+        this.rootMetricsGroup.stopTimer(timerName, startTime);
     }
 
     @Override

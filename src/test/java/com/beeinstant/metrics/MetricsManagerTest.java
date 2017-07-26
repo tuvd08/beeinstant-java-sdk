@@ -38,8 +38,8 @@ public class MetricsManagerTest {
 
     static {
         // stop scheduled flush
-        System.setProperty("flush.manual", "true");
-        System.setProperty("beeinstant.port", String.valueOf(BEEINSTANT_PORT));
+        System.setProperty("beeinstant.flush.manual", "true");
+        System.setProperty("beeinstant.endpoint", "http://localhost:" + BEEINSTANT_PORT);
         MetricsManager.init(TEST_SERVICE_NAME, TEST_HOST_NAME);
     }
 

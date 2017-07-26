@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class DummyLogger extends MetricsLogger {
+class DummyLogger extends MetricsLogger {
 
     private static final DummyMetrics dummyMetrics = new DummyMetrics();
 
@@ -57,13 +57,8 @@ public class DummyLogger extends MetricsLogger {
     }
 
     @Override
-    public void startTimer(String timerName) {
-        //do nothing
-    }
-
-    @Override
-    public void stopTimer(String timerName) {
-        //do nothing
+    public TimerMetric startTimer(String timerName) {
+        return null;
     }
 
     @Override
