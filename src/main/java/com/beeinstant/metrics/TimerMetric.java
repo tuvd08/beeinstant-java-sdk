@@ -19,19 +19,30 @@
 
 package com.beeinstant.metrics;
 
-class DummyMetrics implements Metrics {
-    @Override
-    public void incCounter(String counterName, int value) {
-        //do nothing
+public class TimerMetric implements AutoCloseable {
+
+    final private Metrics metrics;
+    final private String timerName;
+    final private long startTime;
+
+    public TimerMetric(final Metrics metrics, final String timerName, final long startTime) {
+        this.metrics = metrics;
+        this.timerName = timerName;
+        this.startTime = startTime;
+    }
+
+    public long getStartTime() {
+        return startTime;
     }
 
     @Override
-    public TimerMetric startTimer(String timerName) {
-        return null;
-    }
-
-    @Override
-    public void record(String metricName, double value, Unit unit) {
-        //do nothing
+    public void close() {
+        if (this.metrics instanceof MetricsLogger) {
+            ((MetricsLogger) this.metrics).stopTimer(timerName, startTime);
+        } else if (this.metrics instanceof MetricsCollector) {
+            ((MetricsCollector) this.metrics).stopTimer(timerName, startTime);
+        } else if (this.metrics instanceof MetricsGroup) {
+            ((MetricsGroup) this.metrics).stopTimer(timerName, startTime);
+        }
     }
 }

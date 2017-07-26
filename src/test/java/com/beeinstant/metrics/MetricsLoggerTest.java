@@ -213,10 +213,9 @@ public class MetricsLoggerTest {
             tasks.add(() -> {
                 for (int j = 0; j < numOfSamples; j++) {
                     Thread.sleep(rand.nextInt(40));
-                    final long startTime;
-                    startTime = metricsLogger.startTimer("MyTimer");
-                    Thread.sleep(rand.nextInt(10));
-                    metricsLogger.stopTimer("MyTimer", startTime);
+                    try (TimerMetric timer = metricsLogger.startTimer("MyTimer")) {
+                        Thread.sleep(rand.nextInt(10));
+                    }
                 }
                 return null;
             });
@@ -241,8 +240,8 @@ public class MetricsLoggerTest {
     private void collectTestMetrics(final Metrics metrics) {
         final long startTime;
         metrics.incCounter("NumOfUploadedImages", 1000);
-        startTime = metrics.startTimer("Latency");
-        metrics.stopTimer("Latency", startTime);
+        final TimerMetric timer = metrics.startTimer("Latency");
+        timer.close();
         metrics.record("ImageSize", 100, Unit.KILO_BYTE);
         metrics.record("ImageSize", 200, Unit.KILO_BYTE);
     }

@@ -43,16 +43,15 @@ class MetricsCollector implements Metrics {
     }
 
     @Override
-    public long startTimer(final String timerName) {
+    public TimerMetric startTimer(final String timerName) {
         if (DimensionsUtils.isValidName(timerName)) {
-            return this.metrics.computeIfAbsent(timerName, key -> new Timer()).startTimer();
+            return new TimerMetric(this, timerName, this.metrics.computeIfAbsent(timerName, key -> new Timer()).startTimer());
         }
         MetricsManager.reportError("Invalid timer name " + timerName);
-        return 0;
+        return null;
     }
 
-    @Override
-    public void stopTimer(final String timerName, long startTime) {
+    void stopTimer(final String timerName, final long startTime) {
         if (DimensionsUtils.isValidName(timerName)) {
             this.metrics.computeIfAbsent(timerName, key -> new Timer()).stopTimer(startTime);
         } else {

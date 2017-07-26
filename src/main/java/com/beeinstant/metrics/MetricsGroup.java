@@ -47,14 +47,13 @@ class MetricsGroup implements Metrics {
     }
 
     @Override
-    public long startTimer(final String timerName) {
+    public TimerMetric startTimer(final String timerName) {
         final AtomicLong startTime = new AtomicLong(0);
-        updateMetricsCollector(metricsCollector -> startTime.set(metricsCollector.startTimer(timerName)));
-        return startTime.get();
+        updateMetricsCollector(metricsCollector -> startTime.set(metricsCollector.startTimer(timerName).getStartTime()));
+        return new TimerMetric(this, timerName, startTime.get());
     }
 
-    @Override
-    public void stopTimer(final String timerName, long startTime) {
+    void stopTimer(final String timerName, final long startTime) {
         updateMetricsCollector(metricsCollector -> metricsCollector.stopTimer(timerName, startTime));
     }
 

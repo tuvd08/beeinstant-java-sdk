@@ -26,9 +26,7 @@ public interface Metrics {
 
     void incCounter(final String counterName, final int value);
 
-    long startTimer(final String timerName);
-
-    void stopTimer(final String timerName, long startTime);
+    TimerMetric startTimer(final String timerName);
 
     void record(final String metricName, final double value, final Unit unit);
 }
