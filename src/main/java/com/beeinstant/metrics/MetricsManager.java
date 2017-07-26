@@ -178,7 +178,7 @@ public class MetricsManager {
     }
 
     /**
-     * Get Root metrics logger which manages the root dimensions "service=<YourServiceName>"
+     * Get Root metrics logger which manages the root dimensions "service=YourServiceName"
      *
      * @return metrics logger for the root dimensions
      */
