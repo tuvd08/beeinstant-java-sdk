@@ -1,5 +1,14 @@
 # beeinstant-java-sdk
 
+## Maven
+```
+<dependency>
+  <groupId>com.beeinstant</groupId>
+  <artifactId>metrics</artifactId>
+  <version>1.1.1</version>
+</dependency>
+```
+
 ## Usage
 
 ### Initialization
