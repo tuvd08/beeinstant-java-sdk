@@ -8,7 +8,16 @@
   <version>1.1.1</version>
 </dependency>
 ```
-
+## Gradle
+```
+dependencies {
+    compile 'com.beeinstant:metrics:1.1.1'
+}
+```
+## SBT
+```
+libraryDependencies += "com.beeinstant" % "metrics" % "1.1.1"
+```
 ## Usage
 
 ### Initialization
