@@ -20,9 +20,10 @@ libraryDependencies += "com.beeinstant" % "metrics" % "1.1.1"
 ```
 ## Usage
 
-### Initialization
+#### Initialization
 Initialized MetricsManager via static block to ensure all metrics can be emitted approriately
 
+Java
 ```java
 static {
  MetricsManager.init("Your service name");
@@ -30,6 +31,7 @@ static {
 ```
 
 ### Extends metrics by adding your own defined measurement
+Java
 ```
  final MetricsLogger metricsLogger = MetricsManager.getMetricsLogger(dimensions);
  metricsLogger.incCounter("NumOfExceptions", 1);
