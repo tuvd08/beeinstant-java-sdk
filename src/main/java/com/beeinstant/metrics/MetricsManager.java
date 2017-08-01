@@ -67,6 +67,7 @@ public class MetricsManager {
 
     private static final String METRIC_ERRORS = "MetricErrors";
     private static CloseableHttpClient httpClient = null;
+    private static PoolingHttpClientConnectionManager poolManager = null;
     private static MetricsLogger rootMetricsLogger = null;
     private static volatile MetricsManager instance = null;
     private static ScheduledExecutorService executorService = null;
@@ -100,8 +101,9 @@ public class MetricsManager {
                 if (MetricsManager.instance == null) {
                     MetricsManager.instance = new MetricsManager(serviceName, hostInfo);
                     MetricsManager.rootMetricsLogger = MetricsManager.instance.metricsLoggers.computeIfAbsent("service=" + serviceName, MetricsLogger::new);
+                    MetricsManager.poolManager = new PoolingHttpClientConnectionManager(Integer.MAX_VALUE, TimeUnit.DAYS); //no more than 2 concurrent connections per given route
                     MetricsManager.httpClient = HttpClients.custom()
-                            .setConnectionManager(new PoolingHttpClientConnectionManager(Integer.MAX_VALUE, TimeUnit.DAYS)) //no more than 2 concurrent connections per given route
+                            .setConnectionManager(poolManager)
                             .setKeepAliveStrategy((response, context) -> 60000)
                             .setRetryHandler(new DefaultHttpRequestRetryHandler()) // 3 times retry by default
                             .build();
@@ -136,6 +138,8 @@ public class MetricsManager {
         }
         if (MetricsManager.instance != null) {
             MetricsManager.instance = null;
+            MetricsManager.poolManager.shutdown();
+            MetricsManager.poolManager = null;
             MetricsManager.httpClient = null;
             MetricsManager.rootMetricsLogger = null;
         }
@@ -225,9 +229,13 @@ public class MetricsManager {
                 }
 
                 HttpPost putMetricCommand = new HttpPost(uri);
-                putMetricCommand.setEntity(entity);
-                HttpResponse response = httpClient.execute(beeInstantHost, putMetricCommand);
-                LOG.info("Response: " + response.getStatusLine().getStatusCode());
+                try {
+                    putMetricCommand.setEntity(entity);
+                    HttpResponse response = httpClient.execute(beeInstantHost, putMetricCommand);
+                    LOG.info("Response: " + response.getStatusLine().getStatusCode());
+                } finally {
+                    putMetricCommand.releaseConnection();
+                }
 
             } catch (Throwable e) {
                 LOG.error("Fail to emit metrics", e);
