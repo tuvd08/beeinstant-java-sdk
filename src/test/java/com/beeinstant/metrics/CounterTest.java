@@ -32,11 +32,6 @@ public class CounterTest {
         this.counter = new Counter();
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddNegativeValueThrowException() {
-        this.counter.incCounter(-1);
-    }
-
     @Test
     public void testEmptyCounter() {
         Assert.assertTrue(this.counter.flushToString().isEmpty());

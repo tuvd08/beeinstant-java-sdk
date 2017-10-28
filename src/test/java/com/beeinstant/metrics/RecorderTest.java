@@ -71,13 +71,6 @@ public class RecorderTest {
         Assert.assertTrue("Some data are still left after being flushed", this.recorder.flushToString().isEmpty());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testMergeInvalidUnitThrowException() {
-        final Recorder recorder2 = new Recorder(Unit.BYTE);
-        recorder2.record(1, Unit.BYTE);
-        this.recorder.merge(recorder2);
-    }
-
     @Test(expected = RuntimeException.class)
     public void testMergeInvalidRecorderThrowException() {
         final Counter counter = new Counter();
@@ -93,16 +86,6 @@ public class RecorderTest {
         Assert.assertEquals("200.0+100.0ms", this.recorder.flushToString());
         Assert.assertTrue("Some data are still left after being flushed", this.recorder.flushToString().isEmpty());
         Assert.assertTrue("Some data are still left after being flushed", recorder2.flushToString().isEmpty());
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testRecordNegativeValueThrowException() {
-        this.recorder.record(-1, Unit.MILLI_SECOND);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testRecordInconsistentUnitThrowException() {
-        this.recorder.record(10, Unit.SECOND);
     }
 
     @Test(expected = UnsupportedOperationException.class)

@@ -68,12 +68,12 @@ public class MetricsManagerSignatureTest {
     @Test
     public void testGetRootMetricsLogger() throws UnsatisfiedExpectationException {
         responseProvider.expect(POST,
-                "/PutMetric?signature=VYN3G0IpEBW2u8EDo%2B9F8sECXa8yldOCpyum7B6EmdU%3D&publicKey=Hello",
-                "application/json",
-                "{\"metrics\":\"d.service=ImageSharing,m.NumOfExceptions=1\n\"}").respondWith(200, "application/json", "");
+                "/PutMetric?signature=GAujSHkC1uu2cfQ%2BH0iNeuCb9MJe%2F0ZphoLCc1sTv94%3D&publicKey=Hello&timestamp=9999",
+                "text/plain",
+                "d.service=ImageSharing,m.NumOfExceptions=1\n").respondWith(200, "application/json", "");
         MetricsManager.getRootMetricsLogger().incCounter("NumOfExceptions", 1);
-        MetricsManager.getRootMetricsLogger().flush();
-        MetricsManager.flushAll();
+        MetricsManager.getRootMetricsLogger().flush(9999);
+        MetricsManager.flushAll(9999);
         responseProvider.verify();
     }
 }

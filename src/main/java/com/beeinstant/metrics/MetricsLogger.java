@@ -95,9 +95,9 @@ public class MetricsLogger implements Metrics {
         return new MetricsGroup(this, dimensionsGroupWithRoot);
     }
 
-    public void flush() {
+    public void flush(long now) {
         MetricsManager.flushMetricsLogger(this);
-        MetricsManager.flushToServer();
+        MetricsManager.flushToServer(now);
     }
 
     @Override

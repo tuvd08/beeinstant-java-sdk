@@ -40,6 +40,8 @@ public class MetricsManagerTest {
         // stop scheduled flush
         System.setProperty("beeinstant.flush.manual", "true");
         System.setProperty("beeinstant.endpoint", "http://localhost:" + BEEINSTANT_PORT);
+        System.setProperty("beeinstant.publicKey", "PublicKey");
+        System.setProperty("beeinstant.secretKey", "SecretKey");
         MetricsManager.init(TEST_SERVICE_NAME, TEST_HOST_NAME);
     }
 
@@ -62,39 +64,42 @@ public class MetricsManagerTest {
 
     @Test
     public void testFlushAll() throws UnsatisfiedExpectationException {
-        responseProvider.expect(POST, "/PutMetric", "application/json", "{\"metrics\":\"d.service=ImageSharing,m.MetricErrors=2\nd.api=Upload,d.service=ImageSharing,m.NumOfExceptions=1\nd.api=Download,d.service=ImageSharing,m.NumOfExceptions=1\n\"}").respondWith(200, "application/json", "");
+        responseProvider.expect(POST, "/PutMetric?publicKey=PublicKey&signature=gN1lZ2yx8vearWPwgavBgchK9cLP5YCqipGwcXxv5II%3D&timestamp=9999",
+                "text/plain",
+                "d.service=ImageSharing,m.MetricErrors=2\nd.api=Upload,d.service=ImageSharing,m.NumOfExceptions=1\nd.api=Download,d.service=ImageSharing,m.NumOfExceptions=1\n")
+                .respondWith(200, "application/json", "");
         collectTestMetrics("api=Upload");
         collectTestMetrics("api=Download");
-        MetricsManager.flushAll();
+        MetricsManager.flushAll(9999);
         responseProvider.verify();
     }
 
     @Test
     public void testFlushIndividualMetricsLogger() throws UnsatisfiedExpectationException {
-        responseProvider.expect(POST, "/PutMetric", "application/json", "{\"metrics\":\"d.api=Upload,d.service=ImageSharing,m.NumOfExceptions=1\nd.service=ImageSharing,m.MetricErrors=1\n\"}").respondWith(200, "application/json", "");
-        responseProvider.expect(POST, "/PutMetric", "application/json", "{\"metrics\":\"d.api=Download,d.service=ImageSharing,m.NumOfExceptions=1\nd.service=ImageSharing,m.MetricErrors=1\n\"}").respondWith(200, "application/json", "");
-        collectTestMetrics("api=Upload").flush();
-        collectTestMetrics("api=Download").flush();
-        MetricsManager.flushAll();
+        responseProvider.expect(POST, "/PutMetric?publicKey=PublicKey&signature=Poa7AK6Ur%2BpKre%2FiQVePkw4XaSfOzu8soIWl4i%2B5SSQ%3D&timestamp=9999", "text/plain", "d.api=Upload,d.service=ImageSharing,m.NumOfExceptions=1\nd.service=ImageSharing,m.MetricErrors=1\n").respondWith(200, "application/json", "");
+        responseProvider.expect(POST, "/PutMetric?publicKey=PublicKey&signature=tnLir6FBTO%2BmcoSXvo55WypqJvE8F%2BzzCovRHhdnjSE%3D&timestamp=9999", "text/plain", "d.api=Download,d.service=ImageSharing,m.NumOfExceptions=1\nd.service=ImageSharing,m.MetricErrors=1\n").respondWith(200, "application/json", "");
+        collectTestMetrics("api=Upload").flush(9999);
+        collectTestMetrics("api=Download").flush(9999);
+        MetricsManager.flushAll(9999);
         responseProvider.verify();
     }
 
     @Test
     public void testGetRootMetricsLogger() throws UnsatisfiedExpectationException {
-        responseProvider.expect(POST, "/PutMetric", "application/json", "{\"metrics\":\"d.service=ImageSharing,m.NumOfExceptions=1\n\"}").respondWith(200, "application/json", "");
+        responseProvider.expect(POST, "/PutMetric?signature=adBk7g2%2BJoCeUtDDy%2Bjb2bcKXTxrxiClwNDFLCw%2FKrI%3D&publicKey=PublicKey&timestamp=9999", "text/plain", "d.service=ImageSharing,m.NumOfExceptions=1\n").respondWith(200, "application/json", "");
         MetricsManager.getRootMetricsLogger().incCounter("NumOfExceptions", 1);
-        MetricsManager.getRootMetricsLogger().flush();
-        MetricsManager.flushAll();
+        MetricsManager.getRootMetricsLogger().flush(9999);
+        MetricsManager.flushAll(9999);
         responseProvider.verify();
     }
 
     @Test
     public void testExtendInvalidDimensionsIgnoreAndReportError() throws UnsatisfiedExpectationException {
-        responseProvider.expect(POST, "/PutMetric", "application/json", "{\"metrics\":\"d.service=ImageSharing,m.MetricErrors=2\n\"}").respondWith(200, "application/json", "");
+        responseProvider.expect(POST, "/PutMetric?signature=8XWXymIrwhCNni6p7U9jSskFXe95qNvtAvmb5%2FE7eA4%3D&publicKey=PublicKey&timestamp=9999", "text/plain", "d.service=ImageSharing,m.MetricErrors=2\n").respondWith(200, "application/json", "");
         final MetricsLogger metricsLogger = MetricsManager.getMetricsLogger("api=Upload");
         metricsLogger.extendDimensions("invalid-dimensions").incCounter("NumOfExceptions", 1);
         metricsLogger.extendDimensions("invalid=@dimensions").incCounter("NumOfExceptions", 1);
-        MetricsManager.flushAll();
+        MetricsManager.flushAll(9999);
         responseProvider.verify();
     }
 
@@ -106,7 +111,7 @@ public class MetricsManagerTest {
         } catch (IllegalArgumentException e) {
             Assert.assertTrue(true);
         } finally {
-            MetricsManager.flushAll();
+            MetricsManager.flushAll(9999);
         }
     }
 

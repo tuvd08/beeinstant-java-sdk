@@ -112,7 +112,7 @@ public class MetricsManager {
                             executorService = Executors.newScheduledThreadPool(1);
                             executorService.scheduleAtFixedRate(() -> {
                                 try {
-                                    flushAll();
+                                    flushAll(System.currentTimeMillis() / 1000);
                                 } catch (Throwable e) {
                                     // Don't stop the thread
                                     LOG.error(e);
@@ -197,17 +197,17 @@ public class MetricsManager {
      * Flush all metrics which have been collected so far by all MetricsLoggers. Metrics can also be flushed by
      * each MetricsLogger individually.
      */
-    public static void flushAll() {
+    public static void flushAll(long now) {
         if (MetricsManager.instance != null) {
             MetricsManager.instance.metricsLoggers.values().forEach(MetricsManager::flushMetricsLogger);
-            flushToServer();
+            flushToServer(now);
         }
     }
 
     /**
      * Flush metrics to BeeInstant Server
      */
-    static void flushToServer() {
+    static void flushToServer(long now) {
         LOG.debug("Flush to BeeInstant Server");
         Collection<String> readyToSubmit = new ArrayList<>();
         metricsQueue.drainTo(readyToSubmit);
@@ -218,23 +218,25 @@ public class MetricsManager {
         });
         if (!readyToSubmit.isEmpty() && beeInstantHost != null) {
             try {
-                StringEntity entity = new StringEntity("{\"metrics\":\"" + builder.toString() + "\"}");
-                entity.setContentType("application/json");
+                final String body = builder.toString();
+                StringEntity entity = new StringEntity(body);
+                entity.setContentType("text/plain");
 
                 String uri = "/PutMetric";
                 final String signature = sign(entity);
                 if (!signature.isEmpty()) {
                     uri += "?signature=" + URLEncoder.encode(signature, "UTF-8");
                     uri += "&publicKey=" + URLEncoder.encode(publicKey, "UTF-8");
-                }
+                    uri += "&timestamp=" + now;
 
-                HttpPost putMetricCommand = new HttpPost(uri);
-                try {
-                    putMetricCommand.setEntity(entity);
-                    HttpResponse response = httpClient.execute(beeInstantHost, putMetricCommand);
-                    LOG.info("Response: " + response.getStatusLine().getStatusCode());
-                } finally {
-                    putMetricCommand.releaseConnection();
+                    HttpPost putMetricCommand = new HttpPost(uri);
+                    try {
+                        putMetricCommand.setEntity(entity);
+                        HttpResponse response = httpClient.execute(beeInstantHost, putMetricCommand);
+                        LOG.info("Response: " + response.getStatusLine().getStatusCode());
+                    } finally {
+                        putMetricCommand.releaseConnection();
+                    }
                 }
 
             } catch (Throwable e) {

@@ -38,13 +38,9 @@ class Recorder implements Metric {
 
     @Override
     public void record(final double value, final Unit unit) {
-        if (value < 0) {
-            throw new IllegalArgumentException("Value cannot be negative");
+        if (this.unit.equals(unit)) {
+            values.add(Math.max(0.0, value));
         }
-        if (!this.unit.equals(unit)) {
-            throw new IllegalArgumentException("Unit is not consistent. " + this.unit + " is in use");
-        }
-        values.add(value);
     }
 
     @Override

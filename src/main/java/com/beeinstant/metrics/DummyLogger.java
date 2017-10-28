@@ -47,7 +47,7 @@ class DummyLogger extends MetricsLogger {
     }
 
     @Override
-    public void flush() {
+    public void flush(long now) {
         //do nothing
     }
 

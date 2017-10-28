@@ -32,7 +32,7 @@ public class MetricsManagerUninitializedTest {
         try {
             collectTestMetrics("api=Upload");
             collectTestMetrics("api=Download");
-            MetricsManager.flushAll();
+            MetricsManager.flushAll(System.currentTimeMillis() / 1000);
         } catch (Throwable e) {
             fail("Not expecting any exception");
         }
@@ -41,9 +41,9 @@ public class MetricsManagerUninitializedTest {
     @Test
     public void testFlushIndividualMetricsLogger() throws UnsatisfiedExpectationException {
         try {
-            collectTestMetrics("api=Upload").flush();
-            collectTestMetrics("api=Download").flush();
-            MetricsManager.flushAll();
+            collectTestMetrics("api=Upload").flush(System.currentTimeMillis() / 1000);
+            collectTestMetrics("api=Download").flush(System.currentTimeMillis() / 1000);
+            MetricsManager.flushAll(System.currentTimeMillis() / 1000);
         } catch (Throwable e) {
             fail("ot expecting any exception");
         }
@@ -53,8 +53,8 @@ public class MetricsManagerUninitializedTest {
     public void testGetRootMetricsLogger() throws UnsatisfiedExpectationException {
         try {
             MetricsManager.getRootMetricsLogger().incCounter("NumOfExceptions", 1);
-            MetricsManager.getRootMetricsLogger().flush();
-            MetricsManager.flushAll();
+            MetricsManager.getRootMetricsLogger().flush(System.currentTimeMillis() / 1000);
+            MetricsManager.flushAll(System.currentTimeMillis() / 1000);
         } catch (Throwable e) {
             fail("Not expecting any exception");
         }

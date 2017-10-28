@@ -30,10 +30,7 @@ class Counter implements Metric {
 
     @Override
     public void incCounter(final int value) {
-        if (value < 0) {
-            throw new IllegalArgumentException("Value cannot be negative");
-        }
-        if (!this.counter.compareAndSet(-1, value)) {
+        if (value >= 0 && !this.counter.compareAndSet(-1, value)) {
             this.counter.addAndGet(value);
         }
     }
