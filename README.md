@@ -25,7 +25,7 @@ MetricsManager.shutdown();
 
 ## Installation
 ### Open BeeInstant Account
-Open a trial BeeInstant account on [https://beeinstant.com](https://beeinstant.com). After your account is activated, you can log into [https://app.beeinstant.com](https://app.beeinstant.com) to get endpoint and credentials required by the SDK to publish metrics. Launch your service with JVM options:
+Open a BeeInstant account on [https://beeinstant.com](https://beeinstant.com). After your account is activated, you can log into [https://app.beeinstant.com](https://app.beeinstant.com) to get endpoint and credentials required by the SDK to publish metrics. Launch your service with JVM options:
 ```
 -Dbeeinstant.endpoint=<endpoint> -Dbeeinstant.publicKey=<public_key> -Dbeeinstant.secretKey=<secret_key>
 ```
