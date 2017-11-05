@@ -38,20 +38,20 @@ The SDK is published to Maven Central. You can get it [here](https://mvnreposito
 <dependency>
   <groupId>com.beeinstant</groupId>
   <artifactId>metrics</artifactId>
-  <version>1.1.3</version>
+  <version>1.1.4</version>
 </dependency>
 ```
 
 #### Gradle
 ```
 dependencies {
-    compile 'com.beeinstant:metrics:1.1.3'
+    compile 'com.beeinstant:metrics:1.1.4'
 }
 ```
 
 #### SBT
 ```
-libraryDependencies += "com.beeinstant" % "metrics" % "1.1.3"
+libraryDependencies += "com.beeinstant" % "metrics" % "1.1.4"
 ```
 
 ## Usage by Examples
