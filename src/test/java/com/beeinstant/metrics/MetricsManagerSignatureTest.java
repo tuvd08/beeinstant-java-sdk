@@ -45,7 +45,7 @@ public class MetricsManagerSignatureTest {
         System.setProperty("beeinstant.endpoint", "http://localhost:" + BEEINSTANT_PORT);
         System.setProperty("beeinstant.publicKey", "Hello");
         System.setProperty("beeinstant.secretKey", "World");
-        MetricsManager.init(TEST_SERVICE_NAME, TEST_HOST_NAME);
+        MetricsManager.init(TEST_SERVICE_NAME, "", TEST_HOST_NAME);
     }
 
     @BeforeClass

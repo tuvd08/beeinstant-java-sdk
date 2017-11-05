@@ -74,33 +74,41 @@ public class MetricsManager {
 
     private static HttpHost beeInstantHost;
     private final String serviceName;
+    private final String env;
     private final String hostInfo;
     private final Map<String, MetricsLogger> metricsLoggers = new ConcurrentHashMap<>();
 
-    private MetricsManager(final String serviceName, final String hostInfo) {
+    private MetricsManager(final String serviceName, final String env, final String hostInfo) {
         this.serviceName = serviceName;
+        this.env = env.trim();
         this.hostInfo = hostInfo;
         beeInstantHost = createHostFromEndpoint(endpoint);
     }
 
     /**
-     * Initialize MetricsManager by providing a service name and customized hostInfo, for example, an IP address of
-     * the localhost.
+     * Initialize MetricsManager by providing a service name, environment, customized hostInfo,
+     * for example, an IP address of the localhost.
      * <p>
      * Note: only the first init call wins. Subsequent init calls will be ignored.
      *
      * @param serviceName, used to identify your service
+     * @param env,         the environment the service is running in like Development, Production, etc.
      * @param hostInfo,    customized hostInfo info, can be an IP address of the localhost
      */
-    public static void init(final String serviceName, final String hostInfo) {
+    public static void init(final String serviceName, final String env, final String hostInfo) {
         if (!DimensionsUtils.isValidName(serviceName)) {
             throw new IllegalArgumentException("Invalid service name");
         }
         if (MetricsManager.instance == null) {
             synchronized (MetricsManager.class) {
                 if (MetricsManager.instance == null) {
-                    MetricsManager.instance = new MetricsManager(serviceName, hostInfo);
-                    MetricsManager.rootMetricsLogger = MetricsManager.instance.metricsLoggers.computeIfAbsent("service=" + serviceName, MetricsLogger::new);
+                    MetricsManager.instance = new MetricsManager(serviceName, env, hostInfo);
+                    String envDimension = EMPTY_STRING;
+                    if (env.trim().length() > 0) {
+                        envDimension = ",env=" + env.trim();
+                    }
+                    MetricsManager.rootMetricsLogger = MetricsManager.instance.metricsLoggers
+                            .computeIfAbsent("service=" + serviceName + envDimension, MetricsLogger::new);
                     MetricsManager.poolManager = new PoolingHttpClientConnectionManager(Integer.MAX_VALUE, TimeUnit.DAYS); //no more than 2 concurrent connections per given route
                     MetricsManager.httpClient = HttpClients.custom()
                             .setConnectionManager(poolManager)
@@ -146,19 +154,32 @@ public class MetricsManager {
     }
 
     /**
-     * Initialize MetricsManager by providing a service name and localhost info. Localhost info by default will be
-     * the hostname of the localhost.
+     * Initialize MetricsManager by providing a service name, environment, customized hostInfo,
+     * for example, an IP address of the localhost.
+     * <p>
+     * Note: only the first init call wins. Subsequent init calls will be ignored.
+     *
+     * @param serviceName, a name to identify your service
+     * @param env,         the environment the service is running in like Development, Production, etc.
+     */
+    public static void init(final String serviceName, final String env) {
+        try {
+            MetricsManager.init(serviceName, env, InetAddress.getLocalHost().getHostName());
+        } catch (UnknownHostException e) {
+            throw new RuntimeException("Cannot get hostname of the localhost");
+        }
+    }
+
+    /**
+     * Initialize MetricsManager by providing a service name, environment, customized hostInfo,
+     * for example, an IP address of the localhost.
      * <p>
      * Note: only the first init call wins. Subsequent init calls will be ignored.
      *
      * @param serviceName, a name to identify your service
      */
     public static void init(final String serviceName) {
-        try {
-            MetricsManager.init(serviceName, InetAddress.getLocalHost().getHostName());
-        } catch (UnknownHostException e) {
-            throw new RuntimeException("Cannot get hostname of the localhost");
-        }
+        MetricsManager.init(serviceName, EMPTY_STRING);
     }
 
     /**
@@ -172,6 +193,9 @@ public class MetricsManager {
             final Map<String, String> dimensionsMap = DimensionsUtils.parseDimensions(dimensions);
             if (!dimensionsMap.isEmpty()) {
                 dimensionsMap.put("service", MetricsManager.instance.serviceName);
+                if (MetricsManager.instance.env.length() > 0) {
+                    dimensionsMap.put("env", MetricsManager.instance.env);
+                }
                 return MetricsManager.instance.metricsLoggers.computeIfAbsent(
                         DimensionsUtils.serializeDimensionsToString(dimensionsMap), key -> new MetricsLogger(dimensionsMap));
             } else {
@@ -265,6 +289,18 @@ public class MetricsManager {
     public static String getServiceName() {
         if (MetricsManager.instance != null) {
             return MetricsManager.instance.serviceName;
+        }
+        return EMPTY_STRING;
+    }
+
+    /**
+     * Get environment which is used to initialize MetricsManager
+     *
+     * @return environment
+     */
+    public static String getEnvironment() {
+        if (MetricsManager.instance != null) {
+            return MetricsManager.instance.env;
         }
         return EMPTY_STRING;
     }

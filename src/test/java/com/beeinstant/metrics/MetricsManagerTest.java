@@ -33,6 +33,7 @@ public class MetricsManagerTest {
     private static final int BEEINSTANT_PORT = 8989;
     private static final String TEST_SERVICE_NAME = "ImageSharing";
     private static final String TEST_HOST_NAME = "test.beeinstant.com";
+    private static final String TEST_ENV = "Test";
     private static MockHttpServer server;
     private static SimpleHttpResponseProvider responseProvider;
 
@@ -42,7 +43,7 @@ public class MetricsManagerTest {
         System.setProperty("beeinstant.endpoint", "http://localhost:" + BEEINSTANT_PORT);
         System.setProperty("beeinstant.publicKey", "PublicKey");
         System.setProperty("beeinstant.secretKey", "SecretKey");
-        MetricsManager.init(TEST_SERVICE_NAME, TEST_HOST_NAME);
+        MetricsManager.init(TEST_SERVICE_NAME, TEST_ENV, TEST_HOST_NAME);
     }
 
     @BeforeClass
@@ -64,9 +65,9 @@ public class MetricsManagerTest {
 
     @Test
     public void testFlushAll() throws UnsatisfiedExpectationException {
-        responseProvider.expect(POST, "/PutMetric?publicKey=PublicKey&signature=gN1lZ2yx8vearWPwgavBgchK9cLP5YCqipGwcXxv5II%3D&timestamp=9999",
+        responseProvider.expect(POST, "/PutMetric?publicKey=PublicKey&signature=F5UzCqx30wv5KuZe3Brl83Z1mottwlNt8%2FmFgUrrles%3D&timestamp=9999",
                 "text/plain",
-                "d.service=ImageSharing,m.MetricErrors=2\nd.api=Upload,d.service=ImageSharing,m.NumOfExceptions=1\nd.api=Download,d.service=ImageSharing,m.NumOfExceptions=1\n")
+                "d.api=Download,d.env=Test,d.service=ImageSharing,m.NumOfExceptions=1\nd.env=Test,d.service=ImageSharing,m.MetricErrors=2\nd.api=Upload,d.env=Test,d.service=ImageSharing,m.NumOfExceptions=1\n")
                 .respondWith(200, "application/json", "");
         collectTestMetrics("api=Upload");
         collectTestMetrics("api=Download");
@@ -76,8 +77,8 @@ public class MetricsManagerTest {
 
     @Test
     public void testFlushIndividualMetricsLogger() throws UnsatisfiedExpectationException {
-        responseProvider.expect(POST, "/PutMetric?publicKey=PublicKey&signature=Poa7AK6Ur%2BpKre%2FiQVePkw4XaSfOzu8soIWl4i%2B5SSQ%3D&timestamp=9999", "text/plain", "d.api=Upload,d.service=ImageSharing,m.NumOfExceptions=1\nd.service=ImageSharing,m.MetricErrors=1\n").respondWith(200, "application/json", "");
-        responseProvider.expect(POST, "/PutMetric?publicKey=PublicKey&signature=tnLir6FBTO%2BmcoSXvo55WypqJvE8F%2BzzCovRHhdnjSE%3D&timestamp=9999", "text/plain", "d.api=Download,d.service=ImageSharing,m.NumOfExceptions=1\nd.service=ImageSharing,m.MetricErrors=1\n").respondWith(200, "application/json", "");
+        responseProvider.expect(POST, "/PutMetric?publicKey=PublicKey&signature=gNSFXMDPG4SndS2NPu4V0z3F15QahXqSKUNOJIIjxkQ%3D&timestamp=9999", "text/plain", "d.api=Upload,d.env=Test,d.service=ImageSharing,m.NumOfExceptions=1\nd.env=Test,d.service=ImageSharing,m.MetricErrors=1\n").respondWith(200, "application/json", "");
+        responseProvider.expect(POST, "/PutMetric?publicKey=PublicKey&signature=mC%2BS%2B7dK2Iec8k8QwfmOCAVd5Ap0F2q513LNutxjPDc%3D&timestamp=9999", "text/plain", "d.api=Download,d.env=Test,d.service=ImageSharing,m.NumOfExceptions=1\nd.env=Test,d.service=ImageSharing,m.MetricErrors=1\n").respondWith(200, "application/json", "");
         collectTestMetrics("api=Upload").flush(9999);
         collectTestMetrics("api=Download").flush(9999);
         MetricsManager.flushAll(9999);
@@ -86,7 +87,7 @@ public class MetricsManagerTest {
 
     @Test
     public void testGetRootMetricsLogger() throws UnsatisfiedExpectationException {
-        responseProvider.expect(POST, "/PutMetric?signature=adBk7g2%2BJoCeUtDDy%2Bjb2bcKXTxrxiClwNDFLCw%2FKrI%3D&publicKey=PublicKey&timestamp=9999", "text/plain", "d.service=ImageSharing,m.NumOfExceptions=1\n").respondWith(200, "application/json", "");
+        responseProvider.expect(POST, "/PutMetric?signature=ywU47qgdD6IQdHrjYXgAWwOig%2BlJAPcfvCP2zzX73lY%3D&publicKey=PublicKey&timestamp=9999", "text/plain", "d.env=Test,d.service=ImageSharing,m.NumOfExceptions=1\n").respondWith(200, "application/json", "");
         MetricsManager.getRootMetricsLogger().incCounter("NumOfExceptions", 1);
         MetricsManager.getRootMetricsLogger().flush(9999);
         MetricsManager.flushAll(9999);
@@ -95,7 +96,7 @@ public class MetricsManagerTest {
 
     @Test
     public void testExtendInvalidDimensionsIgnoreAndReportError() throws UnsatisfiedExpectationException {
-        responseProvider.expect(POST, "/PutMetric?signature=8XWXymIrwhCNni6p7U9jSskFXe95qNvtAvmb5%2FE7eA4%3D&publicKey=PublicKey&timestamp=9999", "text/plain", "d.service=ImageSharing,m.MetricErrors=2\n").respondWith(200, "application/json", "");
+        responseProvider.expect(POST, "/PutMetric?signature=xbI2XBsKlrGHDk513PcdS2qc8KSQtPIzpF%2FhPc59mZs%3D&publicKey=PublicKey&timestamp=9999", "text/plain", "d.env=Test,d.service=ImageSharing,m.MetricErrors=2\n").respondWith(200, "application/json", "");
         final MetricsLogger metricsLogger = MetricsManager.getMetricsLogger("api=Upload");
         metricsLogger.extendDimensions("invalid-dimensions").incCounter("NumOfExceptions", 1);
         metricsLogger.extendDimensions("invalid=@dimensions").incCounter("NumOfExceptions", 1);
@@ -123,6 +124,11 @@ public class MetricsManagerTest {
     @Test
     public void testGetServiceName() {
         Assert.assertEquals(TEST_SERVICE_NAME, MetricsManager.getServiceName());
+    }
+
+    @Test
+    public void testGetEnvironment() {
+        Assert.assertEquals(TEST_ENV, MetricsManager.getEnvironment());
     }
 
     @Test(expected = IllegalArgumentException.class)
