@@ -19,16 +19,20 @@
 
 package com.beeinstant.metrics;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class TimerMetric implements AutoCloseable {
 
     final private Metrics metrics;
     final private String timerName;
     final private long startTime;
+    final private AtomicBoolean closed;
 
     public TimerMetric(final Metrics metrics, final String timerName, final long startTime) {
         this.metrics = metrics;
         this.timerName = timerName;
         this.startTime = startTime;
+        this.closed = new AtomicBoolean(false);
     }
 
     public long getStartTime() {
@@ -37,12 +41,14 @@ public class TimerMetric implements AutoCloseable {
 
     @Override
     public void close() {
-        if (this.metrics instanceof MetricsLogger) {
-            ((MetricsLogger) this.metrics).stopTimer(timerName, startTime);
-        } else if (this.metrics instanceof MetricsCollector) {
-            ((MetricsCollector) this.metrics).stopTimer(timerName, startTime);
-        } else if (this.metrics instanceof MetricsGroup) {
-            ((MetricsGroup) this.metrics).stopTimer(timerName, startTime);
+        if (closed.compareAndSet(false, true)) {
+            if (this.metrics instanceof MetricsLogger) {
+                ((MetricsLogger) this.metrics).stopTimer(timerName, startTime);
+            } else if (this.metrics instanceof MetricsCollector) {
+                ((MetricsCollector) this.metrics).stopTimer(timerName, startTime);
+            } else if (this.metrics instanceof MetricsGroup) {
+                ((MetricsGroup) this.metrics).stopTimer(timerName, startTime);
+            }
         }
     }
 }

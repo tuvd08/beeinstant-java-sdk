@@ -156,6 +156,20 @@ public class MetricsLoggerTest {
         Assert.assertEquals(500, counterValues.stream().mapToDouble(Double::doubleValue).sum(), 0.0);
     }
 
+    @Test
+    public void testTimerMetricCloseOnce() throws InterruptedException {
+        try(TimerMetric timer = this.metricsLogger.startTimer("MyTimer")) {
+            Thread.sleep(10);
+            timer.close();
+            Thread.sleep(40);
+        }
+        String valStr = extractMetricValues("MyTimer", flushMetricsLoggerToString(this.metricsLogger));
+        final List<Double> values = new ArrayList<>();
+        values.addAll(convertValuesStringToList(valStr.substring(0, valStr.length() - "ms".length())));
+        Assert.assertEquals(1, values.size());
+        Assert.assertTrue(values.get(0) < 50);
+    }
+
     private void assertAndExtractValues(final List<Double> values, final String logEntry, final String metricName, final String unit) {
         final String recorderValuesString = extractMetricValues(metricName, logEntry);
         if (!recorderValuesString.isEmpty()) {
