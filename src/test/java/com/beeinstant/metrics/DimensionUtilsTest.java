@@ -50,7 +50,7 @@ public class DimensionUtilsTest {
         Assert.assertEquals("d.api=Upload,d.location=Hanoi,d.service=ImageSharing", DimensionsUtils.extendAndSerializeDimensions(rootDimensions, "location=Hanoi"));
         Assert.assertEquals("d.api=Download,d.service=ImageSharing", DimensionsUtils.extendAndSerializeDimensions(rootDimensions, "api=Download"));
         Assert.assertEquals("d.api=Download,d.location=Hanoi,d.service=ImageSharing", DimensionsUtils.extendAndSerializeDimensions(rootDimensions, "location=Hanoi,api=Download"));
-        Assert.assertEquals("d.api=Upload,d.service=ImageSharing", DimensionsUtils.extendAndSerializeDimensions(new HashMap<>(), "service=ImageSharing, api=Upload"));
+        Assert.assertEquals("d.api=Upload,d.service=ImageSharing", DimensionsUtils.extendAndSerializeDimensions(new HashMap<String, String>(), "service=ImageSharing, api=Upload"));
     }
 
     @Test

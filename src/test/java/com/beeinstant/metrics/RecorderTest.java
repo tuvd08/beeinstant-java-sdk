@@ -105,7 +105,10 @@ public class RecorderTest {
 
     private void assertValuesAndUnit(final String expectedOutput, final List<Double> values, final Unit unit) {
         final Recorder recorder = new Recorder(unit);
-        values.forEach(value -> recorder.record(value, unit));
+//        values.forEach(value -> recorder.record(value, unit));
+        for (Double value : values) {
+            recorder.record(value, unit);
+        }
         Assert.assertEquals(expectedOutput, recorder.flushToString());
         Assert.assertTrue("Some data are still left after being flushed", recorder.flushToString().isEmpty());
     }
