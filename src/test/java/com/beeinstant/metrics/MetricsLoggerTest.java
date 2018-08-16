@@ -129,7 +129,10 @@ public class MetricsLoggerTest {
         executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS);
 
         // flush everything left
-        output.add(flushMetricsLoggerToString(this.metricsLogger));
+        for (int i = 0; i < 10; i++) {
+            output.add(flushMetricsLoggerToString(this.metricsLogger));
+            Thread.sleep(100);
+        }
 
         final List<Double> recorderValues = new ArrayList<>();
         final List<Double> timerValues = new ArrayList<>();
