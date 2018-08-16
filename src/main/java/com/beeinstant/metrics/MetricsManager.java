@@ -19,27 +19,42 @@
 
 package com.beeinstant.metrics;
 
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.log4j.Logger;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
+import org.apache.http.HeaderElement;
+import org.apache.http.HeaderElementIterator;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.message.BasicHeaderElementIterator;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.protocol.HttpContext;
+import org.apache.log4j.Logger;
 
 /**
  * The entry point to start collecting metrics.
@@ -76,7 +91,7 @@ public class MetricsManager {
     private final String serviceName;
     private final String env;
     private final String hostInfo;
-    private final Map<String, MetricsLogger> metricsLoggers = new ConcurrentHashMap<>();
+    private final Map<String, MetricsLogger> metricsLoggers = new ConcurrentHashMap<String, MetricsLogger>();
 
     private MetricsManager(final String serviceName, final String env, final String hostInfo) {
         this.serviceName = serviceName;
@@ -107,23 +122,36 @@ public class MetricsManager {
                     if (env.trim().length() > 0) {
                         envDimension = ",env=" + env.trim();
                     }
-                    MetricsManager.rootMetricsLogger = MetricsManager.instance.metricsLoggers
-                            .computeIfAbsent("service=" + serviceName + envDimension, MetricsLogger::new);
+                    
+//                    MetricsManager.rootMetricsLogger = MetricsManager.instance.metricsLoggers
+//                            .computeIfAbsent("service=" + serviceName + envDimension, MetricsLogger::new);
+                    String infoEnvDimension = "service=" + serviceName + envDimension;
+                    MetricsLogger rootMetricsLogger = MetricsManager.instance.metricsLoggers.get(infoEnvDimension);
+                    if(rootMetricsLogger == null) {
+                        rootMetricsLogger = new MetricsLogger(infoEnvDimension);
+                        MetricsManager.instance.metricsLoggers.put(infoEnvDimension, rootMetricsLogger);
+                    }
+                    MetricsManager.rootMetricsLogger = rootMetricsLogger;
+                    
                     MetricsManager.poolManager = new PoolingHttpClientConnectionManager(Integer.MAX_VALUE, TimeUnit.DAYS); //no more than 2 concurrent connections per given route
                     MetricsManager.httpClient = HttpClients.custom()
                             .setConnectionManager(poolManager)
-                            .setKeepAliveStrategy((response, context) -> 60000)
+                            .setKeepAliveStrategy(myStrategy)
                             .setRetryHandler(new DefaultHttpRequestRetryHandler()) // 3 times retry by default
                             .build();
+                    
                     if (!manualFlush) {
                         try {
                             executorService = Executors.newScheduledThreadPool(1);
-                            executorService.scheduleAtFixedRate(() -> {
-                                try {
-                                    flushAll(System.currentTimeMillis() / 1000);
-                                } catch (Throwable e) {
-                                    // Don't stop the thread
-                                    LOG.error(e);
+                            executorService.scheduleAtFixedRate(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        flushAll(System.currentTimeMillis() / 1000);
+                                    } catch (Throwable e) {
+                                        // Don't stop the thread
+                                        LOG.error(e);
+                                    }
                                 }
                             }, flushStartDelayInSeconds, flushInSeconds, SECONDS);
                         } catch (Throwable e) {
@@ -134,6 +162,22 @@ public class MetricsManager {
             }
         }
     }
+    
+    private static ConnectionKeepAliveStrategy myStrategy = new ConnectionKeepAliveStrategy() {
+        @Override
+        public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
+            HeaderElementIterator it = new BasicHeaderElementIterator(response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+            while (it.hasNext()) {
+                HeaderElement he = it.nextElement();
+                String param = he.getName();
+                String value = he.getValue();
+                if (value != null && param.equalsIgnoreCase("timeout")) {
+                    return Long.parseLong(value) * 1000;
+                }
+            }
+            return 60 * 1000;
+        }
+    };
 
     /**
      * Shutdown MetricsManager, clean up resources
@@ -196,8 +240,16 @@ public class MetricsManager {
                 if (MetricsManager.instance.env.length() > 0) {
                     dimensionsMap.put("env", MetricsManager.instance.env);
                 }
-                return MetricsManager.instance.metricsLoggers.computeIfAbsent(
-                        DimensionsUtils.serializeDimensionsToString(dimensionsMap), key -> new MetricsLogger(dimensionsMap));
+//                return MetricsManager.instance.metricsLoggers.computeIfAbsent(
+//                        DimensionsUtils.serializeDimensionsToString(dimensionsMap), key -> new MetricsLogger(dimensionsMap));
+                String dimentions = DimensionsUtils.serializeDimensionsToString(dimensionsMap);
+                MetricsLogger metricsLogger = MetricsManager.instance.metricsLoggers.get(dimentions);
+                if (metricsLogger == null) {
+                    metricsLogger = new MetricsLogger(dimensionsMap);
+                    MetricsManager.instance.metricsLoggers.put(dimentions, metricsLogger);
+                }
+                System.out.println("getMetricsLogger " + metricsLogger.getRootDimensions());
+                return metricsLogger;
             } else {
                 throw new IllegalArgumentException("Dimensions must be valid and non-empty");
             }
@@ -223,7 +275,10 @@ public class MetricsManager {
      */
     public static void flushAll(long now) {
         if (MetricsManager.instance != null) {
-            MetricsManager.instance.metricsLoggers.values().forEach(MetricsManager::flushMetricsLogger);
+//            MetricsManager.instance.metricsLoggers.values().forEach(MetricsManager::flushMetricsLogger);
+            for (MetricsLogger metricsLogger : MetricsManager.instance.metricsLoggers.values()) {
+                flushMetricsLogger(metricsLogger);
+            }
             flushToServer(now);
         }
     }
@@ -236,10 +291,16 @@ public class MetricsManager {
         Collection<String> readyToSubmit = new ArrayList<>();
         metricsQueue.drainTo(readyToSubmit);
         StringBuilder builder = new StringBuilder();
-        readyToSubmit.forEach(string -> {
-            builder.append(string);
-            builder.append("\n");
-        });
+//        readyToSubmit.forEach(string -> {
+//            builder.append(string);
+//            builder.append("\n");
+//        });
+        for (String metricsString : readyToSubmit) {
+            if (!metricsString.isEmpty()) {
+                builder.append(metricsString);
+                builder.append("\n");
+            }
+        }
         if (!readyToSubmit.isEmpty() && beeInstantHost != null) {
             try {
                 final String body = builder.toString();
@@ -312,7 +373,7 @@ public class MetricsManager {
      * @param errorMessage, error message during metric data collecting process
      */
     static void reportError(final String errorMessage) {
-        if (MetricsManager.instance != null) {
+        if (MetricsManager.instance != null && MetricsManager.rootMetricsLogger != null) {
             MetricsManager.rootMetricsLogger.incCounter(METRIC_ERRORS, 1);
         }
         LOG.error(errorMessage);
@@ -324,8 +385,19 @@ public class MetricsManager {
      * @param metricsLogger, contain metric dimensions, metric names, metric data (counter, timer, recorder)
      */
     static void flushMetricsLogger(final MetricsLogger metricsLogger) {
-        metricsLogger.flushToString(MetricsManager::queue);
-        MetricsManager.rootMetricsLogger.flushToString(MetricsManager::queue);
+//        metricsLogger.flushToString(MetricsManager::queue);
+//        MetricsManager.rootMetricsLogger.flushToString(MetricsManager::queue);
+        flushMetricsLoggers(metricsLogger.flushToString());
+        flushMetricsLoggers(MetricsManager.rootMetricsLogger.flushToString());
+    }
+
+    private static void flushMetricsLoggers(final Map<String, MetricsCollector> mMetricsCollector) {
+        for (String dimensions : mMetricsCollector.keySet()) {
+            final String metricsString = mMetricsCollector.get(dimensions).flushToString();
+            if (!metricsString.isEmpty()) {
+                MetricsManager.queue(dimensions + "," + metricsString);
+            }
+        }
     }
 
     private static void queue(String metricString) {

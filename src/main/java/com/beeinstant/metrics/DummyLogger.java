@@ -72,7 +72,7 @@ class DummyLogger extends MetricsLogger {
     }
 
     @Override
-    Map<String, String> getRootDimensions() {
+    public Map<String, String> getRootDimensions() {
         return Collections.EMPTY_MAP;
     }
 

@@ -22,14 +22,13 @@ package com.beeinstant.metrics;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.stream.Collectors;
 
 /**
  * Record measurements with Recorder such as response size of a request etc
  */
 class Recorder implements Metric {
 
-    private final ConcurrentLinkedQueue<Double> values = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Double> values = new ConcurrentLinkedQueue<Double>();
     private final Unit unit;
 
     Recorder(final Unit unit) {
@@ -46,12 +45,13 @@ class Recorder implements Metric {
     @Override
     public String flushToString() {
         Double value;
-        final List<Double> values = new ArrayList<>();
+        final List<Double> values = new ArrayList<Double>();
         while ((value = this.values.poll()) != null) {
             values.add(value);
         }
         if (!values.isEmpty()) {
-            return values.stream().map(String::valueOf).collect(Collectors.joining("+")) + unit;
+//            return values.stream().map(String::valueOf).collect(Collectors.joining("+")) + unit;
+            return values.toString().replace("[", "").replace(", ", "+").replace("]", "") + unit;
         }
         return "";
     }

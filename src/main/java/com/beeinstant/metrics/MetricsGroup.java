@@ -20,10 +20,10 @@
 package com.beeinstant.metrics;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * Group of Metrics is used to access MetricsCollectors
@@ -35,36 +35,56 @@ class MetricsGroup implements Metrics {
 
     MetricsGroup(final MetricsLogger metricsLogger, final String... dimensionsGroup) {
         this.metricsLogger = metricsLogger;
-        this.dimensionsGroup = Arrays.stream(dimensionsGroup)
-                .map(dimensions -> DimensionsUtils.extendAndSerializeDimensions(metricsLogger.getRootDimensions(), dimensions))
-                .filter(dimensions -> !dimensions.isEmpty())
-                .collect(Collectors.toSet());
+//        this.dimensionsGroup = Arrays.stream(dimensionsGroup)
+//                .map(dimensions -> DimensionsUtils.extendAndSerializeDimensions(metricsLogger.getRootDimensions(), dimensions))
+//                .filter(dimensions -> !dimensions.isEmpty())
+//                .collect(Collectors.toSet());
+        List<String> input = Arrays.asList(dimensionsGroup);
+        Set<String> setDimensions = new HashSet<String>();
+        for (String dimensions : input) {
+            if (dimensions != null && !dimensions.isEmpty()) {
+                setDimensions.add(DimensionsUtils.extendAndSerializeDimensions(metricsLogger.getRootDimensions(), dimensions));
+            }
+        }
+        this.dimensionsGroup = setDimensions;
     }
 
     @Override
     public void incCounter(final String counterName, final int value) {
-        updateMetricsCollector(metricsCollector -> metricsCollector.incCounter(counterName, value));
+        // updateMetricsCollector(metricsCollector -> metricsCollector.incCounter(counterName, value));
+        for (String dimensions : dimensionsGroup) {
+            this.metricsLogger.getUpdateMetricsCollector(dimensions).incCounter(counterName, value);
+        }
     }
 
     @Override
     public TimerMetric startTimer(final String timerName) {
         final AtomicLong startTime = new AtomicLong(0);
-        updateMetricsCollector(metricsCollector -> startTime.set(metricsCollector.startTimer(timerName).getStartTime()));
+        // updateMetricsCollector(metricsCollector -> startTime.set(metricsCollector.startTimer(timerName).getStartTime()));
+        for (String dimensions : dimensionsGroup) {
+            startTime.set(this.metricsLogger.getUpdateMetricsCollector(dimensions).startTimer(timerName).getStartTime());
+        }
         return new TimerMetric(this, timerName, startTime.get());
     }
 
     void stopTimer(final String timerName, final long startTime) {
-        updateMetricsCollector(metricsCollector -> metricsCollector.stopTimer(timerName, startTime));
+        // updateMetricsCollector(metricsCollector -> metricsCollector.stopTimer(timerName, startTime));
+        for (String dimensions : dimensionsGroup) {
+            this.metricsLogger.getUpdateMetricsCollector(dimensions).stopTimer(timerName, startTime);
+        }
     }
 
     @Override
     public void record(final String metricName, final double value, final Unit unit) {
-        updateMetricsCollector(metricsCollector -> metricsCollector.record(metricName, value, unit));
+        // updateMetricsCollector(metricsCollector -> metricsCollector.record(metricName, value, unit));
+        for (String dimensions : dimensionsGroup) {
+            this.metricsLogger.getUpdateMetricsCollector(dimensions).record(metricName, value, unit);
+        }
     }
 
-    private void updateMetricsCollector(final Consumer<MetricsCollector> consumer) {
-        this.dimensionsGroup.forEach(dimensions -> {
-            this.metricsLogger.updateMetricsCollector(dimensions, consumer);
-        });
-    }
+//    private void updateMetricsCollector(final java.util.function.Consumer<MetricsCollector> consumer) {
+//        this.dimensionsGroup.forEach(dimensions -> {
+//            this.metricsLogger.updateMetricsCollector(dimensions, consumer);
+//        });
+//    }
 }

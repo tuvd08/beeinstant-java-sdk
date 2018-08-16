@@ -26,14 +26,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * Log metrics for dimensions. This class is thread-safe.
  */
 public class MetricsLogger implements Metrics {
 
-    private final Map<String, MetricsCollector> metricsCollectors = new ConcurrentHashMap<>();
+    private final Map<String, MetricsCollector> metricsCollectors = new ConcurrentHashMap<String, MetricsCollector>();
     private final Map<String, String> rootDimensions;
     private final MetricsGroup rootMetricsGroup;
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -139,6 +138,20 @@ public class MetricsLogger implements Metrics {
         });
     }
 
+    public Map<String, MetricsCollector> flushToString() {
+        lock.writeLock().lock();
+        final Map<String, MetricsCollector> readyToFlush = new HashMap<String, MetricsCollector>();
+        try {
+            readyToFlush.putAll(this.metricsCollectors);
+            this.metricsCollectors.clear();
+        } finally {
+            lock.writeLock().unlock();
+        }
+        return readyToFlush;
+    }
+    public 
+    
+    
     Map<String, String> getRootDimensions() {
         return this.rootDimensions;
     }
@@ -151,17 +164,37 @@ public class MetricsLogger implements Metrics {
         }
     }
 
+    public MetricsCollector getUpdateMetricsCollector(final String dimensions) {
+        MetricsCollector metricsCollector = this.metricsCollectors.get(dimensions);
+        if (metricsCollector == null) {
+            metricsCollector = new MetricsCollector();
+            this.metricsCollectors.put(dimensions, metricsCollector);
+        }
+        if (metricsCollector != this.metricsCollectors.get(dimensions)) {
+            addOrMergeMetricsCollector(dimensions, metricsCollector);
+        }
+        return metricsCollector;
+    }
+
     private void addOrMergeMetricsCollector(final String dimensions, final MetricsCollector metricsCollector) {
         lock.readLock().lock();
         try {
-            this.metricsCollectors.computeIfAbsent(dimensions, key -> metricsCollector).merge(metricsCollector);
+//            this.metricsCollectors.computeIfAbsent(dimensions, key -> metricsCollector).merge(metricsCollector);
+            MetricsCollector oldMetricsCollector = this.metricsCollectors.get(dimensions);
+            if (oldMetricsCollector == null) {
+                oldMetricsCollector = this.metricsCollectors.putIfAbsent(dimensions, metricsCollector);
+                if (oldMetricsCollector == null) {
+                    oldMetricsCollector = metricsCollector;
+                }
+            }
+            oldMetricsCollector.merge(metricsCollector);
         } finally {
             lock.readLock().unlock();
         }
     }
 
     private String getRootDimensionsString() {
-        return this.rootDimensions.entrySet()
-                .stream().map(entry -> entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining(","));
+        //return this.rootDimensions.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining(","));
+        return this.rootDimensions.toString().replace("{", "").replace(" ", "").replace("}", "");
     }
 }

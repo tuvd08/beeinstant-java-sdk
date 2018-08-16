@@ -6,7 +6,7 @@
    <modelVersion>4.0.0</modelVersion>
    <groupId>com.beeinstant</groupId>
    <artifactId>metrics</artifactId>
-   <version>1.1.8-SNAPSHOT</version>
+   <version>1.1.7-jdk7</version>
    <scm>
       <connection>scm:git:git://github.com/beeinstant-dev/beeinstant-java-sdk.git</connection>
       <developerConnection>scm:git:git@github.com:beeinstant-dev/beeinstant-java-sdk.git</developerConnection>
@@ -83,9 +83,11 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.7.0</version>
             <configuration>
                <source>1.8</source>
                <target>1.8</target>
+               <compilerArgument>-Xlint:unchecked</compilerArgument>
             </configuration>
          </plugin>
          <plugin>

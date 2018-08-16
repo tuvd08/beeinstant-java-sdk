@@ -22,7 +22,6 @@ package com.beeinstant.metrics;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Utilities for dealing with Dimensions
@@ -36,7 +35,7 @@ class DimensionsUtils {
     }
 
     static Map<String, String> parseDimensions(final String dimensions) {
-        final Map<String, String> dimensionsMap = new TreeMap<>();
+        final Map<String, String> dimensionsMap = new TreeMap<String, String>();
         final String[] keyValuePairs = dimensions.split(",");
 
         for (final String keyValuePair: keyValuePairs) {
@@ -48,11 +47,11 @@ class DimensionsUtils {
                     dimensionsMap.put(key, value);
                 } else {
                     MetricsManager.reportError("Invalid dimension key or value pair " + key + "=" + value);
-                    return new TreeMap<>();
+                    return new TreeMap<String, String>();
                 }
             } else {
                 MetricsManager.reportError("Invalid dimension key=value pair format " + keyValuePair);
-                return new TreeMap<>();
+                return new TreeMap<String, String>();
             }
         }
 
@@ -62,13 +61,28 @@ class DimensionsUtils {
     static String extendAndSerializeDimensions(final Map<String, String> rootDimensions, final String dimensions) {
         final Map<String, String> newDimensions = parseDimensions(dimensions);
         if (!newDimensions.isEmpty()) {
-            rootDimensions.forEach(newDimensions::putIfAbsent);
+//            rootDimensions.forEach(newDimensions::putIfAbsent);
+            for(String key : rootDimensions.keySet()) {
+              newDimensions.putIfAbsent(key, rootDimensions.get(key));
+            }
             return serializeDimensionsToString(newDimensions);
         }
         return "";
     }
 
     static String serializeDimensionsToString(final Map<String, String> dimensionsMap) {
-        return dimensionsMap.entrySet().stream().map(entry -> "d." + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining(","));
+        if(dimensionsMap == null || dimensionsMap.isEmpty()) {
+            return "";
+        }
+//        return dimensionsMap.entrySet().stream().map(entry -> "d." + entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining(","));
+        StringBuilder builder = new StringBuilder();
+        for (String key : dimensionsMap.keySet()) {
+            if (builder.length() > 0) {
+                builder.append(",");
+            }
+            builder.append("d.").append(key).append("=").append(dimensionsMap.get(key));
+        }
+        return builder.toString();
     }
+
 }
