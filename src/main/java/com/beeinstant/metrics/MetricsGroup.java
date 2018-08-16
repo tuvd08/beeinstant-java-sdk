@@ -43,7 +43,10 @@ class MetricsGroup implements Metrics {
         Set<String> setDimensions = new HashSet<String>();
         for (String dimensions : input) {
             if (dimensions != null && !dimensions.isEmpty()) {
-                setDimensions.add(DimensionsUtils.extendAndSerializeDimensions(metricsLogger.getRootDimensions(), dimensions));
+                final String finalDimensions = DimensionsUtils.extendAndSerializeDimensions(metricsLogger.getRootDimensions(), dimensions);
+                if (!finalDimensions.isEmpty()) {
+                    setDimensions.add(finalDimensions);
+                }
             }
         }
         this.dimensionsGroup = setDimensions;
