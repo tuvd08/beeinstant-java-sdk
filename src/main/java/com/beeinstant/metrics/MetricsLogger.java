@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Consumer;
 
 /**
  * Log metrics for dimensions. This class is thread-safe.
@@ -118,25 +117,25 @@ public class MetricsLogger implements Metrics {
         this.rootMetricsGroup.record(metricName, value, unit);
     }
 
-    void flushToString(final Consumer<String> consumer) {
-        final Map<String, MetricsCollector> readyToFlush = new HashMap<>();
-
-        lock.writeLock().lock();
-        try {
-            readyToFlush.putAll(this.metricsCollectors);
-            readyToFlush.forEach(this.metricsCollectors::remove);
-        } finally {
-            lock.writeLock().unlock();
-        }
-
-        // do actual flush outside of critical section
-        readyToFlush.forEach((dimensions, metricsCollector) -> {
-            final String metricsString = metricsCollector.flushToString();
-            if (!metricsString.isEmpty()) {
-                consumer.accept(dimensions + "," + metricsString);
-            }
-        });
-    }
+//    void flushToString(final Consumer<String> consumer) {
+//        final Map<String, MetricsCollector> readyToFlush = new HashMap<>();
+//
+//        lock.writeLock().lock();
+//        try {
+//            readyToFlush.putAll(this.metricsCollectors);
+//            readyToFlush.forEach(this.metricsCollectors::remove);
+//        } finally {
+//            lock.writeLock().unlock();
+//        }
+//
+//        // do actual flush outside of critical section
+//        readyToFlush.forEach((dimensions, metricsCollector) -> {
+//            final String metricsString = metricsCollector.flushToString();
+//            if (!metricsString.isEmpty()) {
+//                consumer.accept(dimensions + "," + metricsString);
+//            }
+//        });
+//    }
 
     public Map<String, MetricsCollector> flushToString() {
         lock.writeLock().lock();
@@ -156,13 +155,13 @@ public class MetricsLogger implements Metrics {
         return this.rootDimensions;
     }
 
-    void updateMetricsCollector(final String dimensions, final Consumer<MetricsCollector> consumer) {
-        final MetricsCollector metricsCollector = this.metricsCollectors.computeIfAbsent(dimensions, key -> new MetricsCollector());
-        consumer.accept(metricsCollector);
-        if (metricsCollector != this.metricsCollectors.get(dimensions)) {
-            addOrMergeMetricsCollector(dimensions, metricsCollector);
-        }
-    }
+//    void updateMetricsCollector(final String dimensions, final Consumer<MetricsCollector> consumer) {
+//        final MetricsCollector metricsCollector = this.metricsCollectors.computeIfAbsent(dimensions, key -> new MetricsCollector());
+//        consumer.accept(metricsCollector);
+//        if (metricsCollector != this.metricsCollectors.get(dimensions)) {
+//            addOrMergeMetricsCollector(dimensions, metricsCollector);
+//        }
+//    }
 
     public MetricsCollector getUpdateMetricsCollector(final String dimensions) {
         MetricsCollector metricsCollector = this.metricsCollectors.get(dimensions);

@@ -21,7 +21,6 @@ package com.beeinstant.metrics;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.function.Consumer;
 
 class DummyLogger extends MetricsLogger {
 
@@ -66,18 +65,18 @@ class DummyLogger extends MetricsLogger {
         //do nothing
     }
 
-    @Override
-    void flushToString(Consumer<String> consumer) {
-        //do nothing
-    }
+//    @Override
+//    void flushToString(Consumer<String> consumer) {
+//        //do nothing
+//    }
 
     @Override
     public Map<String, String> getRootDimensions() {
         return Collections.EMPTY_MAP;
     }
 
-    @Override
-    void updateMetricsCollector(String dimensions, Consumer<MetricsCollector> consumer) {
-        //do nothing
-    }
+//    @Override
+//    void updateMetricsCollector(String dimensions, Consumer<MetricsCollector> consumer) {
+//        //do nothing
+//    }
 }
