@@ -1,6 +1,6 @@
-# BeeInstant Java SDK
+# BeeInstant Android SDK
 
-BeeInstant Java SDK is a powerful tool for software/dev-ops engineers to define and publish custom metrics to BeeInstant. By using clean and simple APIs, engineers can track their software performance with counters, timers, and recorders in real-time.
+BeeInstant Android SDK is a powerful tool for software/dev-ops engineers to define and publish custom metrics to BeeInstant. By using clean and simple APIs, engineers can track their software performance with counters, timers, and recorders in real-time.
 
 The SDK provides multi-dimensional metrics that allow engineers to tailor make their very own metrics that suits unique cases. The metrics are aggregated at global levels across hosts, times and dimensions. For example, engineers can easily visualize percentile 99.99% of their API latencies at service level by aggregating metrics published from all of their hosts.
 
@@ -30,44 +30,28 @@ Open a BeeInstant account on https://beeinstant.com. After your account is activ
 
 ```
 -Dbeeinstant.endpoint=<endpoint> -Dbeeinstant.publicKey=<public_key> -Dbeeinstant.secretKey=<secret_key>
-Add SDK as dependency
+Add SDK as module
 ```
-
-The SDK is published to Maven Central. You can get it here, or simply add the below dependency to your project.
-
-Maven
-```
-<dependency>
-  <groupId>com.beeinstant</groupId>
-  <artifactId>metrics</artifactId>
-  <version>1.1.7</version>
-</dependency>
-```
-
-Gradle
-```
-dependencies {
-    compile 'com.beeinstant:metrics:1.1.7'
-}
-```
-
-SBT
-```
-libraryDependencies += "com.beeinstant" % "metrics" % "1.1.7"
-```
-
-## Usage by Examples
-
-Let's discover the SDK via an example, monitoring a VideoSharing service.
+Import this module into your android projects
 
 ### Initialization
 
 The first step, we need to initialize the SDK before using it.
 
+```
 MetricsManager.init("VideoSharing");
+	System.setProperty("beeinstant.endpoint", "https://{your endpoint}");
+	System.setProperty("beeinstant.publicKey", "{your publicKey}");
+	System.setProperty("beeinstant.secretKey", "{your secretKey}");
+	System.setProperty("beeinstant.flush.interval", "30");
+	MetricsManager.init("{Your service name}", "", "localhost");
+```
 Later, when your service is shutting down, you can also shutdown the SDK.
 
+```
 MetricsManager.shutdown();
+```
+
 Let say our VideoSharing service provides an Upload API for users to upload their videos. Let's monitor how long it takes to process a video. We call the metric ProcessingTime. We will use TimerMetric to capture it.
 
 Create a metric logger dedicated for Upload API.
